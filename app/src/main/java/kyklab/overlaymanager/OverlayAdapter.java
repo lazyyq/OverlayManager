@@ -158,8 +158,7 @@ class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     }).start();*/
                 Log.e("TAG", "switch onCheckedChanged() triggered, " + (listenForSwitchChange));
                 if (listenForSwitchChange) {
-                    OverlayItem overlay = overlayList.get(getAdapterPosition());
-                    mListener.toggleOverlays(Collections.singletonList(overlay.getPackageName()), b);
+                    mListener.toggleOverlays(Collections.singletonList(getAdapterPosition()), b);
                 }
             } else if (id == R.id.itemCheckBox) {
                 Log.e("TAG", "checkBox onCheckedChanged() triggered");

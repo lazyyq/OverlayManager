@@ -136,22 +136,20 @@ public class MainActivity extends AppCompatActivity implements OverlayInterface 
 
     @Override
     public void toggleSelectedOverlays() {
-        List<String> packagesToEnable = getSelectedOverlays(false);
-        List<String> packagesToDisable = getSelectedOverlays(true);
-        toggleOverlays(packagesToEnable, true);
-        toggleOverlays(packagesToDisable, false);
+        List<Integer> indexes = getSelectedOverlayIndex();
+        toggleOverlays(indexes);
     }
 
     @Override
     public void toggleSelectedOverlays(boolean newState) {
-        List<String> packages = getSelectedOverlays();
-        toggleOverlays(packages, newState);
+        List<Integer> indexes = getSelectedOverlayIndex();
+        toggleOverlays(indexes, newState);
     }
 
     @Override
-    public void toggleOverlays(List<String> packages, boolean newState) {
-        if (packages.isEmpty()) {
-            Snackbar.make(findViewById(R.id.coordinatorLayout),
+    public void toggleOverlays(List<Integer> indexes) {
+        if (indexes.isEmpty()) {
+            Snackbar.make(coordinatorLayout,
                     R.string.nothing_selected,
                     Snackbar.LENGTH_SHORT)
                     .setAction(android.R.string.ok, new View.OnClickListener() {
@@ -163,31 +161,39 @@ public class MainActivity extends AppCompatActivity implements OverlayInterface 
                     .show();
             return;
         }
-        ToggleOverlayThread thread = new ToggleOverlayThread(this, packages, newState);
+        ToggleOverlayThread thread = new ToggleOverlayThread(this, indexes);
         thread.start();
     }
 
-    private List<String> getSelectedOverlays() {
-        List<String> packages = new ArrayList<>();
-        for (OverlayItem overlay : overlayList) {
-            if (overlay.getItemType() == OverlayItem.OVERLAY_ITEM_TYPE_ITEM
-                    && overlay.isItemChecked()) {
-                packages.add(overlay.getPackageName());
-            }
+    @Override
+    public void toggleOverlays(List<Integer> indexes, boolean newState) {
+        if (indexes.isEmpty()) {
+            Snackbar.make(coordinatorLayout,
+                    R.string.nothing_selected,
+                    Snackbar.LENGTH_SHORT)
+                    .setAction(android.R.string.ok, new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+
+                        }
+                    })
+                    .show();
+            return;
         }
-        return packages;
+        ToggleOverlayThread thread = new ToggleOverlayThread(this, indexes, newState);
+        thread.start();
     }
 
-    private List<String> getSelectedOverlays(boolean curState) {
-        List<String> packages = new ArrayList<>();
-        for (OverlayItem overlay : overlayList) {
+    private List<Integer> getSelectedOverlayIndex() {
+        List<Integer> indexes = new ArrayList<>();
+        for (int i = 0, len = overlayList.size(); i < len; ++i) {
+            OverlayItem overlay = overlayList.get(i);
             if (overlay.getItemType() == OverlayItem.OVERLAY_ITEM_TYPE_ITEM
-                    && overlay.isItemChecked()
-                    && (overlay.isEnabled() == curState)) {
-                packages.add(overlay.getPackageName());
+                    && overlay.isItemChecked()) {
+                indexes.add(i);
             }
         }
-        return packages;
+        return indexes;
     }
 
     @SuppressLint("RestrictedApi")
@@ -401,24 +407,53 @@ public class MainActivity extends AppCompatActivity implements OverlayInterface 
 
     class ToggleOverlayThread extends Thread {
         private final Activity pActivity;
-        private final List<String> packageList;
+        private final List<Integer> packageIndex;
+        private final boolean toggleMode;
         private final boolean targetState;
 
-        ToggleOverlayThread(Activity pActivity, List<String> packageList, boolean targetState) {
+        ToggleOverlayThread(Activity pActivity, List<Integer> packageIndex) {
             this.pActivity = pActivity;
-            this.packageList = packageList;
+            this.packageIndex = packageIndex;
+            this.toggleMode = true;
+            this.targetState = false;
+        }
+
+        ToggleOverlayThread(Activity pActivity, List<Integer> packageIndex, boolean targetState) {
+            this.pActivity = pActivity;
+            this.packageIndex = packageIndex;
+            this.toggleMode = false;
             this.targetState = targetState;
         }
 
         @Override
         public void run() {
             Log.e(TAG, "Thread run");
-            AndromedaOverlayManager.INSTANCE.switchOverlay(packageList, targetState);
+            if (!toggleMode) {
+                List<String> packages = new ArrayList<>();
+                for (int i : packageIndex) {
+                    packages.add(overlayList.get(i).getPackageName());
+                }
+                AndromedaOverlayManager.INSTANCE.switchOverlay(packages, targetState);
+            } else {
+                List<String> packagesToEnable = new ArrayList<>();
+                List<String> packagesToDisable = new ArrayList<>();
+                OverlayItem overlayItem;
+                for (int i : packageIndex) {
+                    overlayItem = overlayList.get(i);
+                    if (overlayItem.isEnabled()) {
+                        packagesToDisable.add(overlayItem.getPackageName());
+                    } else {
+                        packagesToEnable.add(overlayItem.getPackageName());
+                    }
+                }
+                AndromedaOverlayManager.INSTANCE.switchOverlay(packagesToEnable, true);
+                AndromedaOverlayManager.INSTANCE.switchOverlay(packagesToDisable, false);
+            }
             pActivity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     updateOverlayList();
-                    Snackbar.make(findViewById(R.id.coordinatorLayout),
+                    Snackbar.make(coordinatorLayout,
                             R.string.selected_toggle_complete,
                             Snackbar.LENGTH_SHORT)
                             .setAction(android.R.string.ok, new View.OnClickListener() {
