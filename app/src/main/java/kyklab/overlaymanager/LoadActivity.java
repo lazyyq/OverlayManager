@@ -17,26 +17,6 @@ import projekt.andromeda.client.AndromedaClient;
 public class LoadActivity extends AppCompatActivity {
     private static final int ANDROMEDA_REQ_CODE_PERMISSION = 14045;
     private Context mContext;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        mContext = this;
-
-        AndromedaClient.INSTANCE.initialize(this);
-        if (ContextCompat.checkSelfPermission(this, AndromedaClient.ACCESS_PERMISSION)
-                == PackageManager.PERMISSION_GRANTED) {
-            // Already has permission
-            startAppIfAndromedaActive();
-        } else {
-            requestPermissions(
-                    new String[]{AndromedaClient.ACCESS_PERMISSION},
-                    ANDROMEDA_REQ_CODE_PERMISSION
-            );
-        }
-    }
-
     private final Runnable serverInactiveRunnable = new Runnable() {
         @Override
         public void run() {
@@ -51,7 +31,6 @@ public class LoadActivity extends AppCompatActivity {
                     .show();
         }
     };
-
     private final Runnable startAppRunnable = new Runnable() {
         @Override
         public void run() {
@@ -75,6 +54,25 @@ public class LoadActivity extends AppCompatActivity {
             }
         }
     };
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        mContext = this;
+
+        AndromedaClient.INSTANCE.initialize(this);
+        if (ContextCompat.checkSelfPermission(this, AndromedaClient.ACCESS_PERMISSION)
+                == PackageManager.PERMISSION_GRANTED) {
+            // Already has permission
+            startAppIfAndromedaActive();
+        } else {
+            requestPermissions(
+                    new String[]{AndromedaClient.ACCESS_PERMISSION},
+                    ANDROMEDA_REQ_CODE_PERMISSION
+            );
+        }
+    }
 
     private void startAppIfAndromedaActive() {
         new Thread(startAppRunnable).start();

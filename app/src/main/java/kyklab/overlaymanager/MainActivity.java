@@ -42,17 +42,19 @@ public class MainActivity extends AppCompatActivity implements OverlayInterface 
     private static final long MINI_FAB_ANIM_LENGTH = 300L;
     private static final long MINI_FAB_ANIM_DELAY = 100L;
     private static final String TAG = "OVERLAY_MANAGER";
+    private final ArrayList<OverlayItem> overlayList = new ArrayList<>();
     private float miniFabTransitionDistance;
     private FloatingActionButton[] miniFab;
     private CardView[] fabText;
     private View fabBackground;
     private CoordinatorLayout coordinatorLayout;
     private boolean isAllChecked;
-    private final ArrayList<OverlayItem> overlayList = new ArrayList<>();
     private OverlayAdapter adapter;
     private UpdateTask updateTask;
     private ProgressBar progressBar;
     private FloatingActionButton fab;
+    private int nightMode;
+    private int newNightMode;
 
     @SuppressLint("RestrictedApi")
     @Override
@@ -233,8 +235,6 @@ public class MainActivity extends AppCompatActivity implements OverlayInterface 
         return true;
     }
 
-    private int nightMode;
-    private int newNightMode;
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
@@ -244,7 +244,7 @@ public class MainActivity extends AppCompatActivity implements OverlayInterface 
                 break;
             case R.id.action_dark_mode:
                 nightMode = AppCompatDelegate.getDefaultNightMode();
-                Log.e("MODE", nightMode+"");
+                Log.e("MODE", nightMode + "");
                 if (nightMode == AppCompatDelegate.MODE_NIGHT_UNSPECIFIED) {
                     newNightMode = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM;
                     Toast.makeText(this, "MODE_NIGHT_FOLLOW_SYSTEM", Toast.LENGTH_SHORT).show();
