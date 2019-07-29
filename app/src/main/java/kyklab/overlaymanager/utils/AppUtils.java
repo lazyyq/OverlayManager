@@ -1,11 +1,11 @@
-package kyklab.overlaymanager;
+package kyklab.overlaymanager.utils;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 
-class AppUtils {
+public class AppUtils {
     public static String getApplicationName(Context context, String packageName)
             throws PackageManager.NameNotFoundException {
         PackageManager pm = context.getPackageManager();

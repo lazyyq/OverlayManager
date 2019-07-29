@@ -1,4 +1,4 @@
-package kyklab.overlaymanager;
+package kyklab.overlaymanager.ui;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -35,6 +35,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import kyklab.overlaymanager.R;
+import kyklab.overlaymanager.overlay.OverlayAdapter;
+import kyklab.overlaymanager.overlay.OverlayInterface;
+import kyklab.overlaymanager.overlay.OverlayItem;
+import kyklab.overlaymanager.utils.AppUtils;
+import kyklab.overlaymanager.utils.ViewUtils;
 import projekt.andromeda.client.AndromedaOverlayManager;
 import projekt.andromeda.client.util.OverlayInfo;
 

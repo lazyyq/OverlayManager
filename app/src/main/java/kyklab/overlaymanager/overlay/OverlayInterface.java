@@ -1,8 +1,8 @@
-package kyklab.overlaymanager;
+package kyklab.overlaymanager.overlay;
 
 import java.util.List;
 
-interface OverlayInterface {
+public interface OverlayInterface {
     boolean isAllChecked();
 
     void setAllChecked(boolean isAllChecked);

@@ -1,4 +1,4 @@
-package kyklab.overlaymanager;
+package kyklab.overlaymanager.ui;
 
 import android.content.Context;
 import android.content.DialogInterface;

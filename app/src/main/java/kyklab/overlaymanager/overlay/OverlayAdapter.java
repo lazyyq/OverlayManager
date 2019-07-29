@@ -1,4 +1,4 @@
-package kyklab.overlaymanager;
+package kyklab.overlaymanager.overlay;
 
 import android.app.Activity;
 import android.text.TextUtils;
@@ -21,7 +21,9 @@ import com.bumptech.glide.Glide;
 import java.util.ArrayList;
 import java.util.Collections;
 
-class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+import kyklab.overlaymanager.R;
+
+public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private final Activity pActivity;
     private final OverlayInterface mListener;
     private final ArrayList<OverlayItem> overlayList;
@@ -79,23 +81,6 @@ class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             overlayItemHolder.itemCheckBox.setChecked(overlay.isItemChecked());
         }
     }
-
-    /*
-    private void updateOverlayItemList(ArrayList<OverlayItem> newList) {
-        OverlayItemDiffCallback callback =
-                new OverlayItemDiffCallback(this.overlayList, newList);
-        final DiffUtil.DiffResult result = DiffUtil.calculateDiff(callback);
-
-        this.overlayList.clear();
-        this.overlayList.addAll(newList);
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                result.dispatchUpdatesTo(OverlayAdapter.this);
-            }
-        });
-    }
-    */
 
     @Override
     public int getItemCount() {

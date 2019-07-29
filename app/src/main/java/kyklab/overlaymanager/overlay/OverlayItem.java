@@ -1,8 +1,8 @@
-package kyklab.overlaymanager;
+package kyklab.overlaymanager.overlay;
 
 import android.graphics.drawable.Drawable;
 
-class OverlayItem {
+public class OverlayItem {
     public static final int OVERLAY_ITEM_TYPE_CATEGORY = 0;
     public static final int OVERLAY_ITEM_TYPE_ITEM = 1;
 

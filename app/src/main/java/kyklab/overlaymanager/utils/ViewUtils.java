@@ -1,8 +1,8 @@
-package kyklab.overlaymanager;
+package kyklab.overlaymanager.utils;
 
 import android.view.View;
 
-class ViewUtils {
+public class ViewUtils {
     public static void animateShowInOrder(final View[] views, float transitionX, float transitionY, long duration, long startDelay) {
         // Animate from top to bottom, but give upper views more start delay
         for (int i = 0, j = views.length; i < j; ++i) {
