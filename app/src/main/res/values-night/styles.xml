@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar.Bridge">
+        <!--<item name="colorPrimary">?colorSurface</item>
+        <item name="android:statusBarColor">?colorSurface</item>
+        <item name="android:navigationBarColor">?colorSurface</item>-->
+        <item name="colorPrimary">?android:attr/colorBackground</item>
+        <item name="colorSecondary">@color/colorSecondary</item>
+        <item name="colorAccent">?colorSecondary</item>
+        <item name="android:statusBarColor">?android:attr/colorBackground</item>
+        <item name="android:navigationBarColor">?android:attr/colorBackground</item>
+        <item name="android:navigationBarDividerColor">?colorControlHighlight</item>
+    </style>
+
+</resources>

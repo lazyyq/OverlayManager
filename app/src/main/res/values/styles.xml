@@ -1,0 +1,43 @@
+<resources>
+
+    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar.Bridge">
+        <!--<item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:statusBarColor">?android:attr/colorBackground</item>
+        <item name="android:navigationBarColor">?android:attr/colorBackground</item>
+        <item name="colorPrimary">?android:attr/colorBackground</item>-->
+
+        <!--<item name="colorPrimary">?colorSurface</item>
+        <item name="android:statusBarColor">?colorSurface</item>
+        <item name="android:navigationBarColor">?colorSurface</item>-->
+
+        <item name="colorPrimary">?android:attr/colorBackground</item>
+        <item name="colorSecondary">@color/colorSecondary</item>
+        <item name="colorAccent">?colorSecondary</item>
+        <item name="android:statusBarColor">?android:attr/colorBackground</item>
+        <item name="android:navigationBarColor">?android:attr/colorBackground</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:navigationBarDividerColor">?colorControlHighlight</item>
+    </style>
+
+    <style name="MiniFab">
+        <item name="android:layout_margin">@dimen/mini_fab_margin</item>
+        <item name="android:alpha">@dimen/mini_fab_initial_alpha</item>
+        <item name="android:clickable">true</item>
+        <item name="android:visibility">gone</item>
+        <item name="fabSize">mini</item>
+        <item name="tint">?colorOnSurface</item>
+    </style>
+
+    <style name="MiniFabCard">
+        <item name="android:layout_margin">@dimen/mini_fab_margin</item>
+        <item name="android:alpha">@dimen/mini_fab_initial_alpha</item>
+        <item name="android:visibility">gone</item>
+    </style>
+
+    <style name="MiniFabText">
+        <item name="android:layout_margin">4dp</item>
+    </style>
+
+</resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="mini_fab_margin">16dp</dimen>
+    <dimen name="mini_fab_transition_distance">8dp</dimen>
+    <dimen name="mini_fab_initial_alpha">0</dimen>
+    <dimen name="fab_size_normal">56dp</dimen>
+</resources>

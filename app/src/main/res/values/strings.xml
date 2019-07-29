@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Overlay Manager</string>
+    <string name="check_all">Check/uncheck all</string>
+    <string name="mini_fab_toggle">Toggle selected overlay(s)</string>
+    <string name="mini_fab_enable">Enable selected overlay(s)</string>
+    <string name="mini_fab_disable">Disable selected overlay(s)</string>
+    <string name="selected_toggle_complete">Selected overlay(s) have been toggled</string>
+    <string name="nothing_selected">No overlay(s) selected</string>
+</resources>
