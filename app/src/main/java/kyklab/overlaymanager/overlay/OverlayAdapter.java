@@ -2,7 +2,6 @@ package kyklab.overlaymanager.overlay;
 
 import android.app.Activity;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,11 +16,13 @@ import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.Collections;
 
 import kyklab.overlaymanager.R;
+import projekt.andromeda.client.AndromedaOverlayManager;
 
 public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private final Activity pActivity;
@@ -29,6 +30,23 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private final ArrayList<OverlayItem> overlayList;
 
     private boolean listenForSwitchChange = false;
+
+    private Runnable msgRunnable = new Runnable() {
+        @Override
+        public void run() {
+            Snackbar.make(
+                    pActivity.findViewById(R.id.coordinatorLayout),
+                    R.string.selected_toggle_complete,
+                    Snackbar.LENGTH_SHORT)
+                    .setAction(android.R.string.ok, new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+
+                        }
+                    })
+                    .show();
+        }
+    };
 
     public OverlayAdapter(Activity pActivity, OverlayInterface mListener, ArrayList<OverlayItem> overlayList) {
         this.pActivity = pActivity;
@@ -131,22 +149,22 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
 
         @Override
-        public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+        public void onCheckedChanged(CompoundButton compoundButton, final boolean b) {
             int id = compoundButton.getId();
-            if (id == R.id.overlaySwitch) {/*new Thread(new Runnable() {
+            if (id == R.id.overlaySwitch) {
+                if (listenForSwitchChange) {
+                    new Thread() {
                         @Override
                         public void run() {
                             OverlayItem overlay = overlayList.get(getAdapterPosition());
-                            AndromedaOverlayManager.INSTANCE.switchOverlay(Collections.singletonList(overlay.getPackageName()), b);
-                            overlay.setEnabled(b);
+                            AndromedaOverlayManager.INSTANCE.switchOverlay(
+                                    Collections.singletonList(overlay.getPackageName()), b
+                            );
+                            pActivity.runOnUiThread(msgRunnable);
                         }
-                    }).start();*/
-                Log.e("TAG", "switch onCheckedChanged() triggered, " + (listenForSwitchChange));
-                if (listenForSwitchChange) {
-                    mListener.toggleOverlays(Collections.singletonList(getAdapterPosition()), b);
+                    }.start();
                 }
             } else if (id == R.id.itemCheckBox) {
-                Log.e("TAG", "checkBox onCheckedChanged() triggered");
                 OverlayItem overlay = overlayList.get(getAdapterPosition());
                 overlay.setItemChecked(b);
                 if (!b) {

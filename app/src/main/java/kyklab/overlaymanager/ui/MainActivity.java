@@ -52,6 +52,7 @@ public class MainActivity extends AppCompatActivity implements OverlayInterface 
     private FloatingActionButton[] miniFab;
     private CardView[] fabText;
     private View fabBackground;
+    private View backgroundBlocker;
     private CoordinatorLayout coordinatorLayout;
     private boolean isAllChecked;
     private OverlayAdapter adapter;
@@ -72,6 +73,7 @@ public class MainActivity extends AppCompatActivity implements OverlayInterface 
 
         coordinatorLayout = findViewById(R.id.coordinatorLayout);
         progressBar = findViewById(R.id.progressBar);
+        backgroundBlocker = findViewById(R.id.backgroundBlocker);
 
         setupFab();
         initRefreshLayout();
@@ -307,6 +309,22 @@ public class MainActivity extends AppCompatActivity implements OverlayInterface 
 //                linearLayoutManager.getOrientation()));
     }
 
+    private void blockScreen() {
+        backgroundBlocker.setVisibility(View.VISIBLE);
+    }
+
+    private void releaseScreen() {
+        backgroundBlocker.setVisibility(View.GONE);
+    }
+
+    private void hideProgressBar() {
+        progressBar.setVisibility(View.GONE);
+    }
+
+    private void showProgressBar() {
+        progressBar.setVisibility(View.VISIBLE);
+    }
+
     @Override
     public boolean isAllChecked() {
         return isAllChecked;
@@ -326,7 +344,8 @@ public class MainActivity extends AppCompatActivity implements OverlayInterface 
 
         @Override
         protected void onPreExecute() {
-            activityWeakReference.get().progressBar.setVisibility(View.VISIBLE);
+            activityWeakReference.get().blockScreen();
+            activityWeakReference.get().showProgressBar();
         }
 
         @Override
@@ -400,7 +419,8 @@ public class MainActivity extends AppCompatActivity implements OverlayInterface 
             }
 
             activity.adapter.notifyDataSetChanged();
-            activity.progressBar.setVisibility(View.GONE);
+            activity.releaseScreen();
+            activity.hideProgressBar();
         }
     }
 
@@ -427,6 +447,13 @@ public class MainActivity extends AppCompatActivity implements OverlayInterface 
         @Override
         public void run() {
             Log.e(TAG, "Thread run");
+            pActivity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    blockScreen();
+                    showProgressBar();
+                }
+            });
             if (!toggleMode) {
                 List<String> packages = new ArrayList<>();
                 for (int i : packageIndex) {
@@ -451,6 +478,8 @@ public class MainActivity extends AppCompatActivity implements OverlayInterface 
             pActivity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    releaseScreen();
+                    hideProgressBar();
                     updateOverlayList();
                     Snackbar.make(coordinatorLayout,
                             R.string.selected_toggle_complete,

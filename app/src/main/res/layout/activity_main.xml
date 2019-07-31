@@ -67,6 +67,14 @@
             android:background="?attr/colorOnSurface"
             android:clickable="true"
             android:visibility="gone" />
+
+        <View
+            android:id="@+id/backgroundBlocker"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:clickable="true"
+            android:visibility="gone" />
     </FrameLayout>
 
     <include layout="@layout/mini_fab_container" />
