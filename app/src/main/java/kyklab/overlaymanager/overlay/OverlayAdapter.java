@@ -24,7 +24,8 @@ import java.util.Collections;
 import kyklab.overlaymanager.R;
 import projekt.andromeda.client.AndromedaOverlayManager;
 
-public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
+        implements View.OnClickListener {
     private final Activity pActivity;
     private final OverlayInterface mListener;
     private final ArrayList<OverlayItem> overlayList;
@@ -38,12 +39,7 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     pActivity.findViewById(R.id.coordinatorLayout),
                     R.string.selected_toggle_complete,
                     Snackbar.LENGTH_SHORT)
-                    .setAction(android.R.string.ok, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-
-                        }
-                    })
+                    .setAction(android.R.string.ok, OverlayAdapter.this)
                     .show();
         }
     };
@@ -110,6 +106,11 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         return overlayList.get(position).getItemType();
     }
 
+    @Override
+    public void onClick(View view) {
+
+    }
+
 
     class OverlayCategoryHolder extends RecyclerView.ViewHolder {
         private final TextView categoryNameView;
@@ -122,7 +123,8 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
     }
 
-    class OverlayItemHolder extends RecyclerView.ViewHolder implements CompoundButton.OnCheckedChangeListener {
+    class OverlayItemHolder extends RecyclerView.ViewHolder
+            implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
         private final CardView itemCardView;
         private final ImageView iconView;
         private final TextView appNameView;
@@ -133,12 +135,7 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         OverlayItemHolder(@NonNull View itemView) {
             super(itemView);
             itemCardView = itemView.findViewById(R.id.itemCardView);
-            itemCardView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    itemCheckBox.setChecked(!itemCheckBox.isChecked());
-                }
-            });
+            itemCardView.setOnClickListener(this);
             iconView = itemView.findViewById(R.id.appIconView);
             appNameView = itemView.findViewById(R.id.appNameView);
             packageNameView = itemView.findViewById(R.id.packageNameView);
@@ -146,6 +143,18 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             overlaySwitch.setOnCheckedChangeListener(this);
             itemCheckBox = itemView.findViewById(R.id.itemCheckBox);
             itemCheckBox.setOnCheckedChangeListener(this);
+        }
+
+        @Override
+        public void onClick(View view) {
+            int id = view.getId();
+            switch (id) {
+                case R.id.itemCardView:
+                    itemCheckBox.setChecked(!itemCheckBox.isChecked());
+                    break;
+                default:
+                    break;
+            }
         }
 
         @Override

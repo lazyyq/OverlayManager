@@ -43,7 +43,8 @@ import kyklab.overlaymanager.utils.ViewUtils;
 import projekt.andromeda.client.AndromedaOverlayManager;
 import projekt.andromeda.client.util.OverlayInfo;
 
-public class MainActivity extends AppCompatActivity implements OverlayInterface {
+public class MainActivity extends AppCompatActivity
+        implements OverlayInterface, View.OnClickListener, View.OnTouchListener {
     private static final long MINI_FAB_ANIM_LENGTH = 300L;
     private static final long MINI_FAB_ANIM_DELAY = 100L;
     private static final String TAG = "OVERLAY_MANAGER";
@@ -97,50 +98,13 @@ public class MainActivity extends AppCompatActivity implements OverlayInterface 
         };
 
         fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (fab.isExpanded()) {
-                    collapseFab();
-                } else {
-                    expandFab();
-                }
-            }
-        });
-        miniFab[0].setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                collapseFab();
-                toggleSelectedOverlays();
-            }
-        });
-        miniFab[1].setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                collapseFab();
-                toggleSelectedOverlays(true);
-            }
-        });
-        miniFab[2].setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                collapseFab();
-                toggleSelectedOverlays(false);
-            }
-        });
+        fab.setOnClickListener(this);
+        for (FloatingActionButton miniFab : miniFab) {
+            miniFab.setOnClickListener(this);
+        }
 
         fabBackground = findViewById(R.id.fabBackground);
-        fabBackground.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                int action = motionEvent.getAction();
-                if (action == MotionEvent.ACTION_DOWN) {
-                    collapseFab();
-                }
-                view.performClick();
-                return true;
-            }
-        });
+        fabBackground.setOnTouchListener(this);
     }
 
     @Override
@@ -161,12 +125,7 @@ public class MainActivity extends AppCompatActivity implements OverlayInterface 
             Snackbar.make(coordinatorLayout,
                     R.string.nothing_selected,
                     Snackbar.LENGTH_SHORT)
-                    .setAction(android.R.string.ok, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-
-                        }
-                    })
+                    .setAction(android.R.string.ok, this)
                     .show();
             return;
         }
@@ -180,12 +139,7 @@ public class MainActivity extends AppCompatActivity implements OverlayInterface 
             Snackbar.make(coordinatorLayout,
                     R.string.nothing_selected,
                     Snackbar.LENGTH_SHORT)
-                    .setAction(android.R.string.ok, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-
-                        }
-                    })
+                    .setAction(android.R.string.ok, this)
                     .show();
             return;
         }
@@ -333,6 +287,52 @@ public class MainActivity extends AppCompatActivity implements OverlayInterface 
     @Override
     public void setAllChecked(boolean isAllChecked) {
         this.isAllChecked = isAllChecked;
+    }
+
+    @Override
+    public void onClick(View view) {
+        int id = view.getId();
+        switch (id) {
+            case R.id.fab:
+                if (fab.isExpanded()) {
+                    collapseFab();
+                } else {
+                    expandFab();
+                }
+                break;
+            case R.id.miniFabToggle:
+                collapseFab();
+                toggleSelectedOverlays();
+                break;
+            case R.id.miniFabEnable:
+                collapseFab();
+                toggleSelectedOverlays(true);
+                break;
+            case R.id.miniFabDisable:
+                collapseFab();
+                toggleSelectedOverlays(false);
+                break;
+            default:
+                break;
+        }
+    }
+
+    @Override
+    public boolean onTouch(View view, MotionEvent motionEvent) {
+        int id = view.getId();
+        switch (id) {
+            case R.id.fabBackground:
+                int action = motionEvent.getAction();
+                if (action == MotionEvent.ACTION_DOWN) {
+                    collapseFab();
+                }
+                view.performClick();
+                break;
+            default:
+                break;
+        }
+
+        return true;
     }
 
     private static class UpdateTask extends AsyncTask<Void, Void, Void> {
@@ -484,12 +484,7 @@ public class MainActivity extends AppCompatActivity implements OverlayInterface 
                     Snackbar.make(coordinatorLayout,
                             R.string.selected_toggle_complete,
                             Snackbar.LENGTH_SHORT)
-                            .setAction(android.R.string.ok, new View.OnClickListener() {
-                                @Override
-                                public void onClick(View view) {
-
-                                }
-                            })
+                            .setAction(android.R.string.ok, (View.OnClickListener) pActivity)
                             .show();
                 }
             });
