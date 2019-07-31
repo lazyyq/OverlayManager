@@ -19,4 +19,21 @@ public class AppUtils {
         ApplicationInfo app = pm.getApplicationInfo(packageName, 0);
         return pm.getApplicationIcon(app);
     }
+
+    // TODO: Find a workaround for unreliable behavior of AndromedaOverlayManager's loading of
+    //  currently installed overlays.
+    /*
+    public static boolean overlayExists(String packageName) {
+        Map<String, List<OverlayInfo>> overlayInfoMap =
+                AndromedaOverlayManager.INSTANCE.getAllOverlay();
+        for (Map.Entry<String, List<OverlayInfo>> mapEntry : overlayInfoMap.entrySet()) {
+            for (OverlayInfo overlayInfo : mapEntry.getValue()) {
+                if (overlayInfo.getPackageName().equals(packageName)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    */
 }

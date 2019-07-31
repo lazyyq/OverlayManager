@@ -16,4 +16,6 @@ public interface OverlayInterface {
     void toggleSelectedOverlays();
 
     void toggleSelectedOverlays(boolean newState);
+
+    void removeAppFromList(String packageName);
 }

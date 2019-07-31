@@ -124,7 +124,7 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     }
 
     class OverlayItemHolder extends RecyclerView.ViewHolder
-            implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
+            implements View.OnClickListener, View.OnLongClickListener, CompoundButton.OnCheckedChangeListener {
         private final CardView itemCardView;
         private final ImageView iconView;
         private final TextView appNameView;
@@ -136,6 +136,7 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             super(itemView);
             itemCardView = itemView.findViewById(R.id.itemCardView);
             itemCardView.setOnClickListener(this);
+            itemCardView.setOnLongClickListener(this);
             iconView = itemView.findViewById(R.id.appIconView);
             appNameView = itemView.findViewById(R.id.appNameView);
             packageNameView = itemView.findViewById(R.id.packageNameView);
@@ -155,6 +156,20 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 default:
                     break;
             }
+        }
+
+        @Override
+        public boolean onLongClick(View view) {
+            int id = view.getId();
+            switch (id) {
+                case R.id.itemCardView:
+                    mListener.removeAppFromList(
+                            overlayList.get(getAdapterPosition()).getPackageName()
+                    );
+                default:
+                    break;
+            }
+            return true;
         }
 
         @Override

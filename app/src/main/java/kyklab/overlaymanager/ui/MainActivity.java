@@ -2,8 +2,10 @@ package kyklab.overlaymanager.ui;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -16,6 +18,7 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
@@ -45,6 +48,7 @@ import projekt.andromeda.client.util.OverlayInfo;
 
 public class MainActivity extends AppCompatActivity
         implements OverlayInterface, View.OnClickListener, View.OnTouchListener {
+    private static final int REQ_CODE_REMOVE_APP = 10000;
     private static final long MINI_FAB_ANIM_LENGTH = 300L;
     private static final long MINI_FAB_ANIM_DELAY = 100L;
     private static final String TAG = "OVERLAY_MANAGER";
@@ -60,6 +64,7 @@ public class MainActivity extends AppCompatActivity
     private UpdateTask updateTask;
     private ProgressBar progressBar;
     private FloatingActionButton fab;
+    private String removedApp;
     private int nightMode;
     private int newNightMode;
 
@@ -290,6 +295,14 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public void removeAppFromList(String packageName) {
+        Uri packageUri = Uri.parse("package:" + packageName);
+        Intent intent = new Intent(Intent.ACTION_DELETE, packageUri);
+        removedApp = packageName;
+        startActivityForResult(intent, REQ_CODE_REMOVE_APP);
+    }
+
+    @Override
     public void onClick(View view) {
         int id = view.getId();
         switch (id) {
@@ -333,6 +346,19 @@ public class MainActivity extends AppCompatActivity
         }
 
         return true;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQ_CODE_REMOVE_APP) {
+            //if (!AppUtils.overlayExists(removedApp)) {
+            // The function is unreliable at the moment,
+            // so let's just assume it was successfully removed anyways.
+            // App was successfully removed
+            updateOverlayList();
+            //}
+        }
     }
 
     private static class UpdateTask extends AsyncTask<Void, Void, Void> {

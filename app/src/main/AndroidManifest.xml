@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="kyklab.overlaymanager">
 
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
     <uses-permission android:name="projekt.andromeda.permission.ACCESS_API" />
 
     <application
