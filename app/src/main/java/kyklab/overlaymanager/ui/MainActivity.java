@@ -2,7 +2,6 @@ package kyklab.overlaymanager.ui;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
@@ -345,14 +344,10 @@ public class MainActivity extends AppCompatActivity implements OverlayInterface 
             String packageName = null;
             String targetAppName;
             String targetPackageName;
-            int state;
             boolean hasAppName;
 
-            //Log.d(TAG, "Loading all overlays");
             Map<String, List<OverlayInfo>> overlayMap = AndromedaOverlayManager.INSTANCE.getAllOverlay();
 
-            ApplicationInfo app;
-            PackageManager pm = activity.getPackageManager();
             for (Map.Entry<String, List<OverlayInfo>> entry : overlayMap.entrySet()) {
                 targetPackageName = entry.getKey();
                 try {
@@ -374,14 +369,12 @@ public class MainActivity extends AppCompatActivity implements OverlayInterface 
                         appName = AppUtils.getApplicationName(activity, packageName); // App name
                         icon = AppUtils.getApplicationIcon(activity, packageName); // App icon
                         enabled = overlay.isEnabled(); // Enabled
-                        //targetPackageName = overlay.getTargetPackageName(); // Get target package name
-                        //targetAppName = AppUtils.getApplicationName(activity, targetPackageName); // Target app name
-                        state = overlay.getState(); // State(?)
                         hasAppName = !TextUtils.equals(appName, packageName); // Has its own app name
 
                         tempList.add(
-                                new OverlayItem(appName, icon, enabled, packageName,
-                                        targetAppName, targetPackageName, state, hasAppName)
+                                new OverlayItem(
+                                        hasAppName ? appName : null, // Store app name only when it exists
+                                        icon, enabled, packageName, hasAppName)
                         );
                     } catch (PackageManager.NameNotFoundException e) {
                         e.printStackTrace();

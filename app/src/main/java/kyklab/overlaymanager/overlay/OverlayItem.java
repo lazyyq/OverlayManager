@@ -11,8 +11,6 @@ public class OverlayItem {
     private boolean enabled;
     private String packageName;
     private String targetAppName;
-    private String targetPackageName;
-    private int state;
     private int itemType;
     private boolean hasAppName;
     private boolean itemChecked = false;
@@ -23,31 +21,19 @@ public class OverlayItem {
         this.enabled = false;
         this.packageName = null;
         this.targetAppName = targetAppName;
-        this.targetPackageName = null;
-        this.state = 0;
         this.itemType = OVERLAY_ITEM_TYPE_CATEGORY;
-        this.hasAppName = true;
+        this.hasAppName = false;
     }
 
-    public OverlayItem(String appName, Drawable icon, boolean enabled, String packageName,
-                       String targetAppName, String targetPackageName, int state, boolean hasAppName) {
+    public OverlayItem(String appName, Drawable icon, boolean enabled,
+                       String packageName, boolean hasAppName) {
         this.appName = appName;
         this.icon = icon;
         this.enabled = enabled;
         this.packageName = packageName;
-        this.targetAppName = targetAppName;
-        this.targetPackageName = targetPackageName;
-        this.state = state;
+        this.targetAppName = null;
         this.itemType = OVERLAY_ITEM_TYPE_ITEM;
         this.hasAppName = hasAppName;
-    }
-
-    public String getAppName() {
-        return appName;
-    }
-
-    public void setAppName(String appName) {
-        this.appName = appName;
     }
 
     @Override
@@ -60,14 +46,20 @@ public class OverlayItem {
                     && this.enabled == target.enabled
                     && this.packageName.equals(target.packageName)
                     && this.targetAppName.equals(target.targetAppName)
-                    && this.targetPackageName.equals(target.targetPackageName)
-                    && this.state == target.state
                     && this.itemType == target.itemType
                     && this.hasAppName == target.hasAppName
                     && this.itemChecked == target.itemChecked;
         } else {
             return false;
         }
+    }
+
+    public String getAppName() {
+        return hasAppName ? appName : packageName;
+    }
+
+    public void setAppName(String appName) {
+        this.appName = appName;
     }
 
     public Drawable getIcon() {
@@ -100,22 +92,6 @@ public class OverlayItem {
 
     public void setTargetAppName(String targetAppName) {
         this.targetAppName = targetAppName;
-    }
-
-    public String getTargetPackageName() {
-        return targetPackageName;
-    }
-
-    public void setTargetPackageName(String targetPackageName) {
-        this.targetPackageName = targetPackageName;
-    }
-
-    public int getState() {
-        return state;
-    }
-
-    public void setState(int state) {
-        this.state = state;
     }
 
     public int getItemType() {
