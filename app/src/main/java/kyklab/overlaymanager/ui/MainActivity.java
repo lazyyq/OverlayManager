@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity
     private UpdateTask updateTask;
     private ProgressBar progressBar;
     private FloatingActionButton fab;
-    private String removedApp;
+    //private String removedApp;
     private int nightMode;
     private int newNightMode;
 
@@ -298,7 +298,7 @@ public class MainActivity extends AppCompatActivity
     public void removeAppFromList(String packageName) {
         Uri packageUri = Uri.parse("package:" + packageName);
         Intent intent = new Intent(Intent.ACTION_DELETE, packageUri);
-        removedApp = packageName;
+        //removedApp = packageName;
         startActivityForResult(intent, REQ_CODE_REMOVE_APP);
     }
 
