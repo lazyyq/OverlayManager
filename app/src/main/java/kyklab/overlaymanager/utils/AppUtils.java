@@ -28,7 +28,7 @@ public class AppUtils {
                 AndromedaOverlayManager.INSTANCE.getAllOverlay();
         for (Map.Entry<String, List<OverlayInfo>> mapEntry : overlayInfoMap.entrySet()) {
             for (OverlayInfo overlayInfo : mapEntry.getValue()) {
-                if (overlayInfo.getPackageName().equals(packageName)) {
+                if (TextUtils.equals(overlayInfo.getPackageName(), packageName)) {
                     return true;
                 }
             }

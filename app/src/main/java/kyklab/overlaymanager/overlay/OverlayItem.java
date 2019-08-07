@@ -1,6 +1,7 @@
 package kyklab.overlaymanager.overlay;
 
 import android.graphics.drawable.Drawable;
+import android.text.TextUtils;
 
 public class OverlayItem {
     public static final int OVERLAY_ITEM_TYPE_CATEGORY = 0;
@@ -41,11 +42,11 @@ public class OverlayItem {
         if (obj instanceof OverlayItem) {
             OverlayItem target = (OverlayItem) obj;
 
-            return this.appName.equals(target.appName)
+            return TextUtils.equals(this.appName, target.appName)
                     //&& this.icon == target.icon // Skip icon comparison as of now
                     && this.enabled == target.enabled
-                    && this.packageName.equals(target.packageName)
-                    && this.targetAppName.equals(target.targetAppName)
+                    && TextUtils.equals(this.packageName, target.packageName)
+                    && TextUtils.equals(this.targetAppName, target.targetAppName)
                     && this.itemType == target.itemType
                     && this.hasAppName == target.hasAppName
                     && this.itemChecked == target.itemChecked;
