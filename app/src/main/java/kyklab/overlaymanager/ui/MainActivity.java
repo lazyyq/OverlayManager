@@ -398,7 +398,7 @@ public class MainActivity extends AppCompatActivity
                 try {
                     targetAppName = AppUtils.getApplicationName(activity, targetPackageName);
                     icon = AppUtils.getApplicationIcon(activity, targetPackageName);
-                    tempList.add(new OverlayItem(targetAppName, icon));
+                    tempList.add(new OverlayItem(targetAppName, targetPackageName, icon));
                 } catch (PackageManager.NameNotFoundException e) {
                     e.printStackTrace();
                     Toast.makeText(activity,

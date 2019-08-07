@@ -12,10 +12,9 @@
     <dimen name="mini_fab_transition_distance">8dp</dimen>
     <dimen name="overlay_category_icon_margin">8dp</dimen>
     <dimen name="overlay_category_icon_size">32dp</dimen>
-    <dimen name="overlay_category_margin_bottom">4dp</dimen>
-    <dimen name="overlay_category_margin_end">16dp</dimen>
-    <dimen name="overlay_category_margin_start">56dp</dimen>
-    <dimen name="overlay_category_margin_top">4dp</dimen>
+    <dimen name="overlay_category_padding_top_bottom">4dp</dimen>
+    <dimen name="overlay_category_padding_end">16dp</dimen>
+    <dimen name="overlay_category_padding_start">56dp</dimen>
     <dimen name="overlay_category_text_margin">8dp</dimen>
     <dimen name="overlay_item_card_content_padding">8dp</dimen>
     <dimen name="overlay_item_card_margin_side">8dp</dimen>

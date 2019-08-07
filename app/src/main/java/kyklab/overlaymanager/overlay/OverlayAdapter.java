@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import kyklab.overlaymanager.R;
+import kyklab.overlaymanager.utils.AppUtils;
 import projekt.andromeda.client.AndromedaOverlayManager;
 
 public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
@@ -112,14 +114,31 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     }
 
 
-    class OverlayCategoryHolder extends RecyclerView.ViewHolder {
+    class OverlayCategoryHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+        private final LinearLayout categoryLayout;
         private final TextView categoryNameView;
         private final ImageView categoryIconView;
 
         OverlayCategoryHolder(@NonNull View itemView) {
             super(itemView);
+            categoryLayout = itemView.findViewById(R.id.categoryLayout);
+            categoryLayout.setOnClickListener(this);
             categoryNameView = itemView.findViewById(R.id.categoryNameView);
             categoryIconView = itemView.findViewById(R.id.categoryIconView);
+        }
+
+        @Override
+        public void onClick(View view) {
+            int id = view.getId();
+            switch (id) {
+                case R.id.categoryLayout:
+                    OverlayItem overlayItem = overlayList.get(getAdapterPosition());
+                    String targetPackageName = overlayItem.getTargetPackageName();
+                    AppUtils.openApplicationSettings(pActivity, targetPackageName);
+                    break;
+                default:
+                    break;
+            }
         }
     }
 

@@ -12,18 +12,20 @@ public class OverlayItem {
     private boolean enabled;
     private String packageName;
     private String targetAppName;
+    private String targetPackageName;
     private int itemType;
     private boolean hasAppName;
     private boolean itemChecked = false;
 
-    public OverlayItem(String targetAppName, Drawable icon) {
+    public OverlayItem(String targetAppName, String targetPackageName, Drawable icon) {
         this.appName = null;
         this.icon = icon;
         this.enabled = false;
         this.packageName = null;
         this.targetAppName = targetAppName;
+        this.targetPackageName = targetPackageName;
         this.itemType = OVERLAY_ITEM_TYPE_CATEGORY;
-        this.hasAppName = false;
+        this.hasAppName = true;
     }
 
     public OverlayItem(String appName, Drawable icon, boolean enabled,
@@ -33,6 +35,7 @@ public class OverlayItem {
         this.enabled = enabled;
         this.packageName = packageName;
         this.targetAppName = null;
+        this.targetPackageName = null;
         this.itemType = OVERLAY_ITEM_TYPE_ITEM;
         this.hasAppName = hasAppName;
     }
@@ -47,6 +50,7 @@ public class OverlayItem {
                     && this.enabled == target.enabled
                     && TextUtils.equals(this.packageName, target.packageName)
                     && TextUtils.equals(this.targetAppName, target.targetAppName)
+                    && TextUtils.equals(this.targetPackageName, target.targetPackageName)
                     && this.itemType == target.itemType
                     && this.hasAppName == target.hasAppName
                     && this.itemChecked == target.itemChecked;
@@ -93,6 +97,14 @@ public class OverlayItem {
 
     public void setTargetAppName(String targetAppName) {
         this.targetAppName = targetAppName;
+    }
+
+    public String getTargetPackageName() {
+        return targetPackageName;
+    }
+
+    public void setTargetPackageName(String targetPackageName) {
+        this.targetPackageName = targetPackageName;
     }
 
     public int getItemType() {
