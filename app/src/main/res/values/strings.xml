@@ -1,12 +1,13 @@
 <resources>
-    <string name="app_name">Overlay Manager</string>
-    <string name="check_all">Check/uncheck all</string>
-    <string name="mini_fab_toggle">Toggle selected overlay(s)</string>
-    <string name="mini_fab_enable">Enable selected overlay(s)</string>
-    <string name="mini_fab_disable">Disable selected overlay(s)</string>
-    <string name="selected_toggle_complete">Selected overlay(s) have been toggled</string>
-    <string name="nothing_selected">No overlay(s) selected</string>
     <string name="andromeda_crashed">Andromeda crashed, probably the server is inactive at the moment.</string>
     <string name="andromeda_denied">Andromeda access permission has been denied.</string>
+    <string name="app_name">Overlay Manager</string>
+    <string name="check_all">Check/uncheck all</string>
+    <string name="mini_fab_disable">Disable selected overlay(s)</string>
+    <string name="mini_fab_enable">Enable selected overlay(s)</string>
+    <string name="mini_fab_toggle">Toggle selected overlay(s)</string>
+    <string name="not_meant_for_you">You\'re not supposed to be seeing this. Please report to the dev if you do.</string>
+    <string name="nothing_selected">No overlay(s) selected</string>
     <string name="oops">Oops!</string>
+    <string name="selected_toggle_complete">Selected overlay(s) have been toggled</string>
 </resources>

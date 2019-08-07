@@ -1,7 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="mini_fab_margin">16dp</dimen>
-    <dimen name="mini_fab_transition_distance">8dp</dimen>
-    <dimen name="mini_fab_initial_alpha">0</dimen>
+    <dimen name="andromeda_warning_margin">16dp</dimen>
+    <dimen name="andromeda_warning_padding_side">48dp</dimen>
+    <dimen name="appbar_height">192dp</dimen>
+    <dimen name="fab_container_margin_end">8dp</dimen>
+    <dimen name="fab_margin">16dp</dimen>
     <dimen name="fab_size_normal">56dp</dimen>
+    <dimen name="mini_fab_initial_alpha">0</dimen>
+    <dimen name="mini_fab_margin">16dp</dimen>
+    <dimen name="mini_fab_text_margin">4dp</dimen>
+    <dimen name="mini_fab_transition_distance">8dp</dimen>
+    <dimen name="overlay_category_icon_margin">8dp</dimen>
+    <dimen name="overlay_category_icon_size">32dp</dimen>
+    <dimen name="overlay_category_margin_bottom">4dp</dimen>
+    <dimen name="overlay_category_margin_end">16dp</dimen>
+    <dimen name="overlay_category_margin_start">56dp</dimen>
+    <dimen name="overlay_category_margin_top">4dp</dimen>
+    <dimen name="overlay_category_text_margin">8dp</dimen>
+    <dimen name="overlay_item_card_content_padding">8dp</dimen>
+    <dimen name="overlay_item_card_margin_side">8dp</dimen>
+    <dimen name="overlay_item_card_margin_top_bottom">4dp</dimen>
+    <dimen name="overlay_item_common_margin_side">8dp</dimen>
+    <dimen name="overlay_item_icon_size">48dp</dimen>
+    <dimen name="overlay_item_text_margin_side">16dp</dimen>
+    <dimen name="recycler_view_padding_bottom">96dp</dimen>
 </resources>

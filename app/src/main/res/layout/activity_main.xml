@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/coordinatorLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="192dp"
+        android:layout_height="@dimen/appbar_height"
         app:liftOnScroll="true"
         app:liftOnScrollTargetViewId="@id/recyclerView">
 
@@ -27,26 +26,7 @@
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        tools:context=".ui.MainActivity">
-
-        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-            android:id="@+id/swipeRefreshLayout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recyclerView"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:clipToPadding="false"
-                android:paddingBottom="96dp" />
-        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    <include layout="@layout/content_main" />
 
     <ProgressBar
         android:id="@+id/progressBar"
@@ -55,27 +35,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center" />
 
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <View
-            android:id="@+id/fabBackground"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:alpha="@dimen/mtrl_emphasis_disabled"
-            android:background="?attr/colorOnSurface"
-            android:clickable="true"
-            android:visibility="gone" />
-
-        <View
-            android:id="@+id/backgroundBlocker"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@android:color/transparent"
-            android:clickable="true"
-            android:visibility="gone" />
-    </FrameLayout>
+    <include layout="@layout/background_block" />
 
     <include layout="@layout/mini_fab_container" />
 
@@ -84,9 +44,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
+        android:layout_margin="@dimen/fab_margin"
         android:clickable="true"
         android:src="@drawable/ic_layers_white_24dp"
-        app:fabCustomSize="56dp"
         app:tint="?colorOnSurface" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

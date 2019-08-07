@@ -6,7 +6,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_gravity="top|end"
-    android:layout_marginEnd="8dp"
+    android:layout_marginEnd="@dimen/fab_container_margin_end"
     app:layout_anchor="@id/fab"
     app:layout_anchorGravity="bottom|center_horizontal"
     tools:context=".ui.MainActivity">
@@ -58,9 +58,9 @@
         app:layout_constraintTop_toTopOf="@id/miniFabEnable">
 
         <TextView
+            style="@style/MiniFabText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="4dp"
             android:text="@string/mini_fab_enable" />
     </androidx.cardview.widget.CardView>
 
