@@ -391,6 +391,9 @@ public class MainActivity extends AppCompatActivity
             String targetPackageName;
             boolean hasAppName;
 
+            Drawable unknownIcon =
+                    activity.getResources().getDrawable(R.drawable.ic_help_24dp, activity.getTheme());
+
             Map<String, List<OverlayInfo>> overlayMap = AndromedaOverlayManager.INSTANCE.getAllOverlay();
 
             for (Map.Entry<String, List<OverlayInfo>> entry : overlayMap.entrySet()) {
@@ -398,15 +401,11 @@ public class MainActivity extends AppCompatActivity
                 try {
                     targetAppName = AppUtils.getApplicationName(activity, targetPackageName);
                     icon = AppUtils.getApplicationIcon(activity, targetPackageName);
-                    tempList.add(new OverlayItem(targetAppName, targetPackageName, icon));
                 } catch (PackageManager.NameNotFoundException e) {
-                    e.printStackTrace();
-                    Toast.makeText(activity,
-                            "Error while loading target " + packageName,
-                            Toast.LENGTH_SHORT)
-                            .show();
-                    continue;
+                    targetAppName = targetPackageName;
+                    icon = unknownIcon;
                 }
+                tempList.add(new OverlayItem(targetAppName, targetPackageName, icon));
 
                 for (OverlayInfo overlay : entry.getValue()) {
                     try {
