@@ -3,9 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".ui.MainActivity">
     <item
-        android:id="@+id/action_dark_mode"
-        android:icon="@drawable/ic_brightness_4_24dp"
-        android:title="@string/check_all"
+        android:id="@+id/action_switch_theme"
+        android:icon="@drawable/ic_brightness_7_24dp"
+        android:title="@string/switch_theme"
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/action_check_all"

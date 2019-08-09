@@ -65,8 +65,6 @@ public class MainActivity extends AppCompatActivity
     private ProgressBar progressBar;
     private FloatingActionButton fab;
     //private String removedApp;
-    private int nightMode;
-    private int newNightMode;
 
     @SuppressLint("RestrictedApi")
     @Override
@@ -82,6 +80,7 @@ public class MainActivity extends AppCompatActivity
         backgroundBlocker = findViewById(R.id.backgroundBlocker);
 
         setupFab();
+        setupTheme();
         initRefreshLayout();
         updateOverlayList();
         setRecyclerView();
@@ -110,6 +109,15 @@ public class MainActivity extends AppCompatActivity
 
         fabBackground = findViewById(R.id.fabBackground);
         fabBackground.setOnTouchListener(this);
+    }
+
+    private void setupTheme() {
+        int nightMode = AppCompatDelegate.getDefaultNightMode();
+        if (nightMode != AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                && nightMode != AppCompatDelegate.MODE_NIGHT_NO
+                && nightMode != AppCompatDelegate.MODE_NIGHT_YES) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+        }
     }
 
     @Override
@@ -195,9 +203,25 @@ public class MainActivity extends AppCompatActivity
         updateTask.cancel(true);
     }
 
+    @SuppressLint("SwitchIntDef")
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
+
+        MenuItem switchTheme = menu.findItem(R.id.action_switch_theme);
+        int nightMode = AppCompatDelegate.getDefaultNightMode();
+        switch (nightMode) {
+            case AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM:
+                switchTheme.setIcon(R.drawable.ic_brightness_7_24dp);
+                break;
+            case AppCompatDelegate.MODE_NIGHT_NO:
+                switchTheme.setIcon(R.drawable.ic_brightness_3_24dp);
+                break;
+            default:
+                switchTheme.setIcon(R.drawable.ic_brightness_auto_black_24dp);
+                break;
+        }
+
         return true;
     }
 
@@ -208,24 +232,8 @@ public class MainActivity extends AppCompatActivity
             case R.id.action_check_all:
                 toggleCheckAllOverlays();
                 break;
-            case R.id.action_dark_mode:
-                nightMode = AppCompatDelegate.getDefaultNightMode();
-                Log.e("MODE", nightMode + "");
-                if (nightMode == AppCompatDelegate.MODE_NIGHT_UNSPECIFIED) {
-                    newNightMode = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM;
-                    Toast.makeText(this, "MODE_NIGHT_FOLLOW_SYSTEM", Toast.LENGTH_SHORT).show();
-                } else if (nightMode == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM) {
-                    newNightMode = AppCompatDelegate.MODE_NIGHT_NO;
-                    Toast.makeText(this, "MODE_NIGHT_NO", Toast.LENGTH_SHORT).show();
-                } else if (nightMode == AppCompatDelegate.MODE_NIGHT_NO) {
-                    newNightMode = AppCompatDelegate.MODE_NIGHT_YES;
-                    Toast.makeText(this, "MODE_NIGHT_YES", Toast.LENGTH_SHORT).show();
-                } else if (nightMode == AppCompatDelegate.MODE_NIGHT_YES) {
-                    newNightMode = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM;
-                    Toast.makeText(this, "MODE_NIGHT_FOLLOW_SYSTEM", Toast.LENGTH_SHORT).show();
-                } else
-                    break;
-                AppCompatDelegate.setDefaultNightMode(newNightMode);
+            case R.id.action_switch_theme:
+                switchTheme();
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -239,6 +247,28 @@ public class MainActivity extends AppCompatActivity
         }
         isAllChecked = !isAllChecked;
         adapter.notifyDataSetChanged();
+    }
+
+    @SuppressLint("SwitchIntDef")
+    private void switchTheme() {
+        int nightMode = AppCompatDelegate.getDefaultNightMode();
+        int newMode;
+        switch (nightMode) {
+            case AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM:
+                Toast.makeText(this, R.string.theme_light, Toast.LENGTH_SHORT).show();
+                newMode = AppCompatDelegate.MODE_NIGHT_NO;
+                break;
+            case AppCompatDelegate.MODE_NIGHT_NO:
+                Toast.makeText(this, R.string.theme_dark, Toast.LENGTH_SHORT).show();
+                newMode = AppCompatDelegate.MODE_NIGHT_YES;
+                break;
+            default:
+                Toast.makeText(this, R.string.theme_auto, Toast.LENGTH_SHORT).show();
+                newMode = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM;
+                break;
+        }
+        AppCompatDelegate.setDefaultNightMode(newMode);
+        invalidateOptionsMenu();
     }
 
     private void initRefreshLayout() {

@@ -10,4 +10,8 @@
     <string name="nothing_selected">No overlay(s) selected</string>
     <string name="oops">Oops!</string>
     <string name="selected_toggle_complete">Selected overlay(s) have been toggled</string>
+    <string name="switch_theme">Switch theme</string>
+    <string name="theme_auto">Theme: Auto</string>
+    <string name="theme_dark">Theme: Dark</string>
+    <string name="theme_light">Theme: Light</string>
 </resources>
