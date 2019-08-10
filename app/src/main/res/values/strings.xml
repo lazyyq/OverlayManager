@@ -14,4 +14,5 @@
     <string name="theme_auto">Theme: Auto</string>
     <string name="theme_dark">Theme: Dark</string>
     <string name="theme_light">Theme: Light</string>
+    <string name="theme_unknown">Theme: Unknown</string>
 </resources>

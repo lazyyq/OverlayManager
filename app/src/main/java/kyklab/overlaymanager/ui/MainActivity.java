@@ -20,7 +20,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
 import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -42,6 +41,7 @@ import kyklab.overlaymanager.overlay.OverlayAdapter;
 import kyklab.overlaymanager.overlay.OverlayInterface;
 import kyklab.overlaymanager.overlay.OverlayItem;
 import kyklab.overlaymanager.utils.AppUtils;
+import kyklab.overlaymanager.utils.ThemeManager;
 import kyklab.overlaymanager.utils.ViewUtils;
 import projekt.andromeda.client.AndromedaOverlayManager;
 import projekt.andromeda.client.util.OverlayInfo;
@@ -80,7 +80,6 @@ public class MainActivity extends AppCompatActivity
         backgroundBlocker = findViewById(R.id.backgroundBlocker);
 
         setupFab();
-        setupTheme();
         initRefreshLayout();
         updateOverlayList();
         setRecyclerView();
@@ -109,15 +108,6 @@ public class MainActivity extends AppCompatActivity
 
         fabBackground = findViewById(R.id.fabBackground);
         fabBackground.setOnTouchListener(this);
-    }
-
-    private void setupTheme() {
-        int nightMode = AppCompatDelegate.getDefaultNightMode();
-        if (nightMode != AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-                && nightMode != AppCompatDelegate.MODE_NIGHT_NO
-                && nightMode != AppCompatDelegate.MODE_NIGHT_YES) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
-        }
     }
 
     @Override
@@ -209,14 +199,15 @@ public class MainActivity extends AppCompatActivity
         getMenuInflater().inflate(R.menu.menu_main, menu);
 
         MenuItem switchTheme = menu.findItem(R.id.action_switch_theme);
-        int nightMode = AppCompatDelegate.getDefaultNightMode();
-        switch (nightMode) {
-            case AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM:
+        int theme = ThemeManager.getCurrentTheme();
+        switch (theme) {
+            case ThemeManager.THEME_AUTO:
                 switchTheme.setIcon(R.drawable.ic_brightness_7_24dp);
                 break;
-            case AppCompatDelegate.MODE_NIGHT_NO:
+            case ThemeManager.THEME_LIGHT:
                 switchTheme.setIcon(R.drawable.ic_brightness_3_24dp);
                 break;
+            case ThemeManager.THEME_DARK:
             default:
                 switchTheme.setIcon(R.drawable.ic_brightness_auto_black_24dp);
                 break;
@@ -249,25 +240,8 @@ public class MainActivity extends AppCompatActivity
         adapter.notifyDataSetChanged();
     }
 
-    @SuppressLint("SwitchIntDef")
     private void switchTheme() {
-        int nightMode = AppCompatDelegate.getDefaultNightMode();
-        int newMode;
-        switch (nightMode) {
-            case AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM:
-                Toast.makeText(this, R.string.theme_light, Toast.LENGTH_SHORT).show();
-                newMode = AppCompatDelegate.MODE_NIGHT_NO;
-                break;
-            case AppCompatDelegate.MODE_NIGHT_NO:
-                Toast.makeText(this, R.string.theme_dark, Toast.LENGTH_SHORT).show();
-                newMode = AppCompatDelegate.MODE_NIGHT_YES;
-                break;
-            default:
-                Toast.makeText(this, R.string.theme_auto, Toast.LENGTH_SHORT).show();
-                newMode = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM;
-                break;
-        }
-        AppCompatDelegate.setDefaultNightMode(newMode);
+        ThemeManager.getInstance().switchTheme();
         invalidateOptionsMenu();
     }
 
