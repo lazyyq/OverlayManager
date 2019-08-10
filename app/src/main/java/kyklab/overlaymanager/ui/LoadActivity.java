@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import kyklab.overlaymanager.R;
+import kyklab.overlaymanager.utils.ThemeManager;
 import projekt.andromeda.client.AndromedaClient;
 
 public class LoadActivity extends AppCompatActivity implements View.OnClickListener {
@@ -28,6 +29,8 @@ public class LoadActivity extends AppCompatActivity implements View.OnClickListe
         andromedaWarning = findViewById(R.id.andromedaWarningBody);
         ImageButton retryAndromeda = findViewById(R.id.retryAndromeda);
         retryAndromeda.setOnClickListener(this);
+
+        ThemeManager.getInstance().init();
 
         AndromedaClient.INSTANCE.initialize(this);
         if (ContextCompat.checkSelfPermission(this, AndromedaClient.ACCESS_PERMISSION)
