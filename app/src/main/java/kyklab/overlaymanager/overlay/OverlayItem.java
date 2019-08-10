@@ -3,7 +3,9 @@ package kyklab.overlaymanager.overlay;
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 
-public class OverlayItem {
+import androidx.annotation.NonNull;
+
+public class OverlayItem implements Cloneable {
     public static final int OVERLAY_ITEM_TYPE_CATEGORY = 0;
     public static final int OVERLAY_ITEM_TYPE_ITEM = 1;
 
@@ -57,6 +59,12 @@ public class OverlayItem {
         } else {
             return false;
         }
+    }
+
+    @NonNull
+    @Override
+    public OverlayItem clone() throws CloneNotSupportedException {
+        return (OverlayItem) super.clone();
     }
 
     public String getAppName() {

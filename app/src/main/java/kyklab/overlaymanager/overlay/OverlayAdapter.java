@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -111,6 +112,15 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     @Override
     public void onClick(View view) {
 
+    }
+
+    public void updateItems(ArrayList<OverlayItem> newList) {
+        final OverlayItemDiffCallback diffCallback = new OverlayItemDiffCallback(this.overlayList, newList);
+        final DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(diffCallback);
+
+        this.overlayList.clear();
+        this.overlayList.addAll(newList);
+        diffResult.dispatchUpdatesTo(this);
     }
 
 

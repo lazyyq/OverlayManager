@@ -231,13 +231,21 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void toggleCheckAllOverlays() {
+        ArrayList<OverlayItem> tempList = new ArrayList<>();
         for (OverlayItem overlay : overlayList) {
+            try {
+                tempList.add(overlay.clone());
+            } catch (CloneNotSupportedException e) {
+                e.printStackTrace();
+            }
+        }
+        for (OverlayItem overlay : tempList) {
             if (overlay.getItemType() == OverlayItem.OVERLAY_ITEM_TYPE_ITEM) {
                 overlay.setItemChecked(!isAllChecked);
             }
         }
         isAllChecked = !isAllChecked;
-        adapter.notifyDataSetChanged();
+        adapter.updateItems(tempList);
     }
 
     private void switchTheme() {
@@ -367,9 +375,11 @@ public class MainActivity extends AppCompatActivity
 
     private static class UpdateTask extends AsyncTask<Void, Void, Void> {
         private final WeakReference<MainActivity> activityWeakReference;
+        private final ArrayList<OverlayItem> tempList;
 
         UpdateTask(MainActivity activity) {
             this.activityWeakReference = new WeakReference<>(activity);
+            this.tempList = new ArrayList<>();
         }
 
         @Override
@@ -384,8 +394,6 @@ public class MainActivity extends AppCompatActivity
             if (activity == null || activity.isFinishing()) {
                 return null;
             }
-
-            ArrayList<OverlayItem> tempList = new ArrayList<>();
 
             String appName;
             Drawable icon;
@@ -434,9 +442,6 @@ public class MainActivity extends AppCompatActivity
                 }
             }
 
-            activity.overlayList.clear();
-            activity.overlayList.addAll(tempList);
-
             return null;
         }
 
@@ -447,7 +452,7 @@ public class MainActivity extends AppCompatActivity
                 return;
             }
 
-            activity.adapter.notifyDataSetChanged();
+            activity.adapter.updateItems(tempList);
             activity.releaseScreen();
             activity.hideProgressBar();
         }
