@@ -9,13 +9,9 @@ public interface OverlayInterface {
 
     void updateOverlayList();
 
-    void toggleOverlays(List<Integer> indexes);
+    void toggleOverlays(List<OverlayItem> list);
 
-    void toggleOverlays(List<Integer> indexes, boolean newState);
-
-    void toggleSelectedOverlays();
-
-    void toggleSelectedOverlays(boolean newState);
+    void toggleOverlays(List<OverlayItem> list, boolean state);
 
     void removeAppFromList(String packageName);
 }

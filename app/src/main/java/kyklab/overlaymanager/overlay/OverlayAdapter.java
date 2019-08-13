@@ -17,36 +17,22 @@ import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.google.android.material.snackbar.Snackbar;
 
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import kyklab.overlaymanager.R;
 import kyklab.overlaymanager.utils.AppUtils;
-import projekt.andromeda.client.AndromedaOverlayManager;
 
 public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         implements View.OnClickListener {
     private final Activity pActivity;
     private final OverlayInterface mListener;
-    private final ArrayList<OverlayItem> overlayList;
+    private final List<OverlayItem> overlayList;
 
     private boolean listenForSwitchChange = false;
 
-    private Runnable msgRunnable = new Runnable() {
-        @Override
-        public void run() {
-            Snackbar.make(
-                    pActivity.findViewById(R.id.coordinatorLayout),
-                    R.string.selected_toggle_complete,
-                    Snackbar.LENGTH_SHORT)
-                    .setAction(android.R.string.ok, OverlayAdapter.this)
-                    .show();
-        }
-    };
-
-    public OverlayAdapter(Activity pActivity, OverlayInterface mListener, ArrayList<OverlayItem> overlayList) {
+    public OverlayAdapter(Activity pActivity, OverlayInterface mListener, List<OverlayItem> overlayList) {
         this.pActivity = pActivity;
         this.mListener = mListener;
         this.overlayList = overlayList;
@@ -183,8 +169,8 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             switch (id) {
                 case R.id.itemCardView:
                     mListener.removeAppFromList(
-                            overlayList.get(getAdapterPosition()).getPackageName()
-                    );
+                            overlayList.get(getAdapterPosition()).getPackageName());
+                    break;
                 default:
                     break;
             }
@@ -196,16 +182,8 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             int id = compoundButton.getId();
             if (id == R.id.overlaySwitch) {
                 if (listenForSwitchChange) {
-                    new Thread() {
-                        @Override
-                        public void run() {
-                            OverlayItem overlay = overlayList.get(getAdapterPosition());
-                            AndromedaOverlayManager.INSTANCE.switchOverlay(
-                                    Collections.singletonList(overlay.getPackageName()), b
-                            );
-                            pActivity.runOnUiThread(msgRunnable);
-                        }
-                    }.start();
+                    OverlayItem overlay = overlayList.get(getAdapterPosition());
+                    mListener.toggleOverlays(Collections.singletonList(overlay), b);
                 }
             } else if (id == R.id.itemCheckBox) {
                 OverlayItem overlay = overlayList.get(getAdapterPosition());

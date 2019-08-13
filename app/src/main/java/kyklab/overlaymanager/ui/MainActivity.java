@@ -1,21 +1,15 @@
 package kyklab.overlaymanager.ui;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.text.TextUtils;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -34,17 +28,14 @@ import com.google.android.material.snackbar.Snackbar;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import kyklab.overlaymanager.R;
 import kyklab.overlaymanager.overlay.OverlayAdapter;
 import kyklab.overlaymanager.overlay.OverlayInterface;
 import kyklab.overlaymanager.overlay.OverlayItem;
-import kyklab.overlaymanager.utils.AppUtils;
+import kyklab.overlaymanager.utils.OverlayManager;
 import kyklab.overlaymanager.utils.ThemeManager;
 import kyklab.overlaymanager.utils.ViewUtils;
-import projekt.andromeda.client.AndromedaOverlayManager;
-import projekt.andromeda.client.util.OverlayInfo;
 
 public class MainActivity extends AppCompatActivity
         implements OverlayInterface, View.OnClickListener, View.OnTouchListener {
@@ -52,7 +43,7 @@ public class MainActivity extends AppCompatActivity
     private static final long MINI_FAB_ANIM_LENGTH = 300L;
     private static final long MINI_FAB_ANIM_DELAY = 100L;
     private static final String TAG = "OVERLAY_MANAGER";
-    private final ArrayList<OverlayItem> overlayList = new ArrayList<>();
+    private final List<OverlayItem> overlayList = new ArrayList<>();
     private float miniFabTransitionDistance;
     private FloatingActionButton[] miniFab;
     private CardView[] fabText;
@@ -61,7 +52,8 @@ public class MainActivity extends AppCompatActivity
     private CoordinatorLayout coordinatorLayout;
     private boolean isAllChecked;
     private OverlayAdapter adapter;
-    private UpdateTask updateTask;
+    private UpdateTask updateTask = null;
+    private ToggleTask toggleTask = null;
     private ProgressBar progressBar;
     private FloatingActionButton fab;
     //private String removedApp;
@@ -110,56 +102,55 @@ public class MainActivity extends AppCompatActivity
         fabBackground.setOnTouchListener(this);
     }
 
-    @Override
-    public void toggleSelectedOverlays() {
-        List<Integer> indexes = getSelectedOverlayIndex();
-        toggleOverlays(indexes);
-    }
-
-    @Override
-    public void toggleSelectedOverlays(boolean newState) {
-        List<Integer> indexes = getSelectedOverlayIndex();
-        toggleOverlays(indexes, newState);
-    }
-
-    @Override
-    public void toggleOverlays(List<Integer> indexes) {
-        if (indexes.isEmpty()) {
-            Snackbar.make(coordinatorLayout,
-                    R.string.nothing_selected,
-                    Snackbar.LENGTH_SHORT)
-                    .setAction(android.R.string.ok, this)
-                    .show();
-            return;
-        }
-        ToggleOverlayThread thread = new ToggleOverlayThread(this, indexes);
-        thread.start();
-    }
-
-    @Override
-    public void toggleOverlays(List<Integer> indexes, boolean newState) {
-        if (indexes.isEmpty()) {
-            Snackbar.make(coordinatorLayout,
-                    R.string.nothing_selected,
-                    Snackbar.LENGTH_SHORT)
-                    .setAction(android.R.string.ok, this)
-                    .show();
-            return;
-        }
-        ToggleOverlayThread thread = new ToggleOverlayThread(this, indexes, newState);
-        thread.start();
-    }
-
-    private List<Integer> getSelectedOverlayIndex() {
-        List<Integer> indexes = new ArrayList<>();
-        for (int i = 0, len = overlayList.size(); i < len; ++i) {
-            OverlayItem overlay = overlayList.get(i);
+    private List<OverlayItem> getSelectedOverlays() {
+        List<OverlayItem> list = new ArrayList<>();
+        for (OverlayItem overlay : overlayList) {
             if (overlay.getItemType() == OverlayItem.OVERLAY_ITEM_TYPE_ITEM
                     && overlay.isItemChecked()) {
-                indexes.add(i);
+                list.add(overlay);
             }
         }
-        return indexes;
+        return list;
+    }
+
+    private void toggleSelectedOverlays() {
+        List<OverlayItem> list = getSelectedOverlays();
+        toggleOverlays(list);
+    }
+
+    private void toggleSelectedOverlays(boolean state) {
+        List<OverlayItem> list = getSelectedOverlays();
+        toggleOverlays(list, state);
+    }
+
+    @Override
+    public void toggleOverlays(List<OverlayItem> list) {
+        if (list.isEmpty()) {
+            Snackbar.make(coordinatorLayout,
+                    R.string.nothing_selected,
+                    Snackbar.LENGTH_SHORT)
+                    .setAction(android.R.string.ok, this)
+                    .show();
+            return;
+        }
+
+        toggleTask = new ToggleTask(this, list, null);
+        toggleTask.execute();
+    }
+
+    @Override
+    public void toggleOverlays(List<OverlayItem> list, boolean state) {
+        if (list.isEmpty()) {
+            Snackbar.make(coordinatorLayout,
+                    R.string.nothing_selected,
+                    Snackbar.LENGTH_SHORT)
+                    .setAction(android.R.string.ok, this)
+                    .show();
+            return;
+        }
+
+        toggleTask = new ToggleTask(this, list, state);
+        toggleTask.execute();
     }
 
     @SuppressLint("RestrictedApi")
@@ -190,7 +181,12 @@ public class MainActivity extends AppCompatActivity
     protected void onPause() {
         super.onPause();
 
-        updateTask.cancel(true);
+        if (updateTask != null) {
+            updateTask.cancel(true);
+        }
+        if (toggleTask != null) {
+            toggleTask.cancel(true);
+        }
     }
 
     @SuppressLint("SwitchIntDef")
@@ -374,8 +370,13 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         protected void onPreExecute() {
-            activityWeakReference.get().blockScreen();
-            activityWeakReference.get().showProgressBar();
+            MainActivity activity = activityWeakReference.get();
+            if (activity == null || activity.isFinishing()) {
+                return;
+            }
+
+            activity.blockScreen();
+            activity.showProgressBar();
         }
 
         @Override
@@ -385,57 +386,10 @@ public class MainActivity extends AppCompatActivity
                 return null;
             }
 
-            ArrayList<OverlayItem> tempList = new ArrayList<>();
-
-            String appName;
-            Drawable icon;
-            boolean enabled;
-            String packageName = null;
-            String targetAppName;
-            String targetPackageName;
-            boolean hasAppName;
-
-            Drawable unknownIcon =
-                    activity.getResources().getDrawable(R.drawable.ic_help_24dp, activity.getTheme());
-
-            Map<String, List<OverlayInfo>> overlayMap = AndromedaOverlayManager.INSTANCE.getAllOverlay();
-
-            for (Map.Entry<String, List<OverlayInfo>> entry : overlayMap.entrySet()) {
-                targetPackageName = entry.getKey();
-                try {
-                    targetAppName = AppUtils.getApplicationName(activity, targetPackageName);
-                    icon = AppUtils.getApplicationIcon(activity, targetPackageName);
-                } catch (PackageManager.NameNotFoundException e) {
-                    targetAppName = targetPackageName;
-                    icon = unknownIcon;
-                }
-                tempList.add(new OverlayItem(targetAppName, targetPackageName, icon));
-
-                for (OverlayInfo overlay : entry.getValue()) {
-                    try {
-                        packageName = overlay.getPackageName(); // Package name
-                        appName = AppUtils.getApplicationName(activity, packageName); // App name
-                        icon = AppUtils.getApplicationIcon(activity, packageName); // App icon
-                        enabled = overlay.isEnabled(); // Enabled
-                        hasAppName = !TextUtils.equals(appName, packageName); // Has its own app name
-
-                        tempList.add(
-                                new OverlayItem(
-                                        hasAppName ? appName : null, // Store app name only when it exists
-                                        icon, enabled, packageName, hasAppName)
-                        );
-                    } catch (PackageManager.NameNotFoundException e) {
-                        e.printStackTrace();
-                        Toast.makeText(activity,
-                                "Error while loading app " + packageName,
-                                Toast.LENGTH_SHORT)
-                                .show();
-                    }
-                }
-            }
+            List<OverlayItem> newList = OverlayManager.getOverlays();
 
             activity.overlayList.clear();
-            activity.overlayList.addAll(tempList);
+            activity.overlayList.addAll(newList);
 
             return null;
         }
@@ -453,70 +407,61 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    class ToggleOverlayThread extends Thread {
-        private final Activity pActivity;
-        private final List<Integer> packageIndex;
-        private final boolean toggleMode;
-        private final boolean targetState;
+    private static class ToggleTask extends AsyncTask<Void, Void, Void> {
+        private final WeakReference<MainActivity> activityWeakReference;
+        private final List<OverlayItem> list;
+        private final Boolean state;
 
-        ToggleOverlayThread(Activity pActivity, List<Integer> packageIndex) {
-            this.pActivity = pActivity;
-            this.packageIndex = packageIndex;
-            this.toggleMode = true;
-            this.targetState = false;
-        }
-
-        ToggleOverlayThread(Activity pActivity, List<Integer> packageIndex, boolean targetState) {
-            this.pActivity = pActivity;
-            this.packageIndex = packageIndex;
-            this.toggleMode = false;
-            this.targetState = targetState;
+        ToggleTask(MainActivity activity, List<OverlayItem> list, Boolean state) {
+            this.activityWeakReference = new WeakReference<>(activity);
+            this.list = list;
+            this.state = state;
         }
 
         @Override
-        public void run() {
-            Log.e(TAG, "Thread run");
-            pActivity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    blockScreen();
-                    showProgressBar();
-                }
-            });
-            if (!toggleMode) {
-                List<String> packages = new ArrayList<>();
-                for (int i : packageIndex) {
-                    packages.add(overlayList.get(i).getPackageName());
-                }
-                AndromedaOverlayManager.INSTANCE.switchOverlay(packages, targetState);
-            } else {
-                List<String> packagesToEnable = new ArrayList<>();
-                List<String> packagesToDisable = new ArrayList<>();
-                OverlayItem overlayItem;
-                for (int i : packageIndex) {
-                    overlayItem = overlayList.get(i);
-                    if (overlayItem.isEnabled()) {
-                        packagesToDisable.add(overlayItem.getPackageName());
-                    } else {
-                        packagesToEnable.add(overlayItem.getPackageName());
-                    }
-                }
-                AndromedaOverlayManager.INSTANCE.switchOverlay(packagesToEnable, true);
-                AndromedaOverlayManager.INSTANCE.switchOverlay(packagesToDisable, false);
+        protected void onPreExecute() {
+            MainActivity activity = activityWeakReference.get();
+            if (activity == null || activity.isFinishing()) {
+                return;
             }
-            pActivity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    releaseScreen();
-                    hideProgressBar();
-                    updateOverlayList();
-                    Snackbar.make(coordinatorLayout,
-                            R.string.selected_toggle_complete,
-                            Snackbar.LENGTH_SHORT)
-                            .setAction(android.R.string.ok, (View.OnClickListener) pActivity)
-                            .show();
-                }
-            });
+
+            activity.blockScreen();
+            activity.showProgressBar();
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            MainActivity activity = activityWeakReference.get();
+            if (activity == null || activity.isFinishing()) {
+                return null;
+            }
+
+            if (state == null) {
+                // Toggle overlays' states, enabled -> disabled, disabled -> enabled
+                OverlayManager.toggleOverlays(list);
+            } else {
+                // Enable or disable overlays
+                OverlayManager.toggleOverlays(list, state);
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            MainActivity activity = activityWeakReference.get();
+            if (activity == null || activity.isFinishing()) {
+                return;
+            }
+
+            activity.releaseScreen();
+            activity.hideProgressBar();
+            activity.updateOverlayList();
+            Snackbar.make(activity.coordinatorLayout,
+                    R.string.selected_toggle_complete,
+                    Snackbar.LENGTH_SHORT)
+                    .setAction(android.R.string.ok, activity)
+                    .show();
         }
     }
 }
