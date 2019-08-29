@@ -1,6 +1,5 @@
 package kyklab.overlaymanager.overlay;
 
-import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 
 public class OverlayItem {
@@ -8,7 +7,6 @@ public class OverlayItem {
     public static final int OVERLAY_ITEM_TYPE_ITEM = 1;
 
     private String appName;
-    private Drawable icon;
     private boolean enabled;
     private String packageName;
     private String targetAppName;
@@ -17,9 +15,8 @@ public class OverlayItem {
     private boolean hasAppName;
     private boolean itemChecked = false;
 
-    public OverlayItem(String targetAppName, String targetPackageName, Drawable icon) {
+    public OverlayItem(String targetAppName, String targetPackageName) {
         this.appName = null;
-        this.icon = icon;
         this.enabled = false;
         this.packageName = null;
         this.targetAppName = targetAppName;
@@ -28,10 +25,9 @@ public class OverlayItem {
         this.hasAppName = true;
     }
 
-    public OverlayItem(String appName, Drawable icon, boolean enabled,
+    public OverlayItem(String appName, boolean enabled,
                        String packageName, boolean hasAppName) {
         this.appName = appName;
-        this.icon = icon;
         this.enabled = enabled;
         this.packageName = packageName;
         this.targetAppName = null;
@@ -65,14 +61,6 @@ public class OverlayItem {
 
     public void setAppName(String appName) {
         this.appName = appName;
-    }
-
-    public Drawable getIcon() {
-        return icon;
-    }
-
-    public void setIcon(Drawable icon) {
-        this.icon = icon;
     }
 
     public boolean isEnabled() {
