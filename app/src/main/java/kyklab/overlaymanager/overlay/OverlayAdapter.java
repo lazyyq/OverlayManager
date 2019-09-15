@@ -29,20 +29,20 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         implements View.OnClickListener {
     private final Activity pActivity;
     private final OverlayInterface mListener;
-    private final List<OverlayItem> overlayList;
+    private final List<RvItem> list;
 
     private boolean listenForSwitchChange = false;
 
-    public OverlayAdapter(Activity pActivity, OverlayInterface mListener, List<OverlayItem> overlayList) {
+    public OverlayAdapter(Activity pActivity, OverlayInterface mListener, List<RvItem> list) {
         this.pActivity = pActivity;
         this.mListener = mListener;
-        this.overlayList = overlayList;
+        this.list = list;
     }
 
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        if (viewType == OverlayItem.OVERLAY_ITEM_TYPE_CATEGORY) {
+        if (viewType == RvItem.TYPE_TARGET) {
             View view = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.overlay_category, parent, false);
             return new OverlayCategoryHolder(view);
@@ -56,20 +56,21 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        OverlayItem overlay = overlayList.get(position);
         if (holder instanceof OverlayCategoryHolder) {
+            TargetItem target = (TargetItem) list.get(position);
             OverlayCategoryHolder overlayCategoryHolder = (OverlayCategoryHolder) holder;
             // Load category icon
             try {
                 Glide.with(pActivity)
-                        .load(AppUtils.getApplicationIcon(pActivity, overlay.getTargetPackageName()))
+                        .load(AppUtils.getApplicationIcon(pActivity, target.getPackageName()))
                         .into(overlayCategoryHolder.categoryIconView);
             } catch (PackageManager.NameNotFoundException e) {
                 e.printStackTrace();
             }
             // Set category name
-            overlayCategoryHolder.categoryNameView.setText(overlay.getTargetAppName());
+            overlayCategoryHolder.categoryNameView.setText(target.getAppName());
         } else {
+            OverlayItem overlay = (OverlayItem) list.get(position);
             OverlayItemHolder overlayItemHolder = (OverlayItemHolder) holder;
             // Load app icon
             try {
@@ -80,7 +81,7 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 e.printStackTrace();
             }
             // If app name == package name, give smaller space for appNameView
-            if (!overlay.isHasAppName()) {
+            if (!overlay.hasAppName()) {
                 overlayItemHolder.appNameView.setSingleLine(true);
                 overlayItemHolder.appNameView.setEllipsize(TextUtils.TruncateAt.END);
             } else {
@@ -99,12 +100,12 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     @Override
     public int getItemCount() {
-        return overlayList.size();
+        return list.size();
     }
 
     @Override
     public int getItemViewType(int position) {
-        return overlayList.get(position).getItemType();
+        return list.get(position).getItemType();
     }
 
     @Override
@@ -131,8 +132,8 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             int id = view.getId();
             switch (id) {
                 case R.id.categoryLayout:
-                    OverlayItem overlayItem = overlayList.get(getAdapterPosition());
-                    String targetPackageName = overlayItem.getTargetPackageName();
+                    OverlayItem overlay = (OverlayItem) list.get(getAdapterPosition());
+                    String targetPackageName = overlay.getPackageName();
                     AppUtils.openApplicationSettings(pActivity, targetPackageName);
                     break;
                 default:
@@ -182,7 +183,7 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             switch (id) {
                 case R.id.itemCardView:
                     mListener.removeAppFromList(
-                            overlayList.get(getAdapterPosition()).getPackageName());
+                            list.get(getAdapterPosition()).getPackageName());
                     break;
                 default:
                     break;
@@ -195,11 +196,11 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             int id = compoundButton.getId();
             if (id == R.id.overlaySwitch) {
                 if (listenForSwitchChange) {
-                    OverlayItem overlay = overlayList.get(getAdapterPosition());
+                    OverlayItem overlay = (OverlayItem) list.get(getAdapterPosition());
                     mListener.toggleOverlays(Collections.singletonList(overlay), b);
                 }
             } else if (id == R.id.itemCheckBox) {
-                OverlayItem overlay = overlayList.get(getAdapterPosition());
+                OverlayItem overlay = (OverlayItem) list.get(getAdapterPosition());
                 overlay.setItemChecked(b);
                 if (!b) {
                     mListener.setAllChecked(false);

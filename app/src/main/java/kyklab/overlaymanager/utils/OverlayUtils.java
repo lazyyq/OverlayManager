@@ -11,12 +11,14 @@ import java.util.Map;
 
 import kyklab.overlaymanager.App;
 import kyklab.overlaymanager.overlay.OverlayItem;
+import kyklab.overlaymanager.overlay.RvItem;
+import kyklab.overlaymanager.overlay.TargetItem;
 import projekt.andromeda.client.AndromedaOverlayManager;
 import projekt.andromeda.client.util.OverlayInfo;
 
-public class OverlayManager {
-    public static List<OverlayItem> getOverlays() {
-        List<OverlayItem> list = new ArrayList<>();
+public class OverlayUtils {
+    public static List<RvItem> getOverlayRvItems() {
+        List<RvItem> newList = new ArrayList<>();
 
         String appName;
         boolean enabled;
@@ -34,7 +36,7 @@ public class OverlayManager {
             } catch (PackageManager.NameNotFoundException e) {
                 targetAppName = targetPackageName;
             }
-            list.add(new OverlayItem(targetAppName, targetPackageName));
+            newList.add(new TargetItem(targetAppName, targetPackageName));
 
             for (OverlayInfo overlay : entry.getValue()) {
                 try {
@@ -43,10 +45,10 @@ public class OverlayManager {
                     enabled = overlay.isEnabled(); // Enabled
                     hasAppName = !TextUtils.equals(appName, packageName); // Has its own app name
 
-                    list.add(
+                    newList.add(
                             new OverlayItem(
                                     hasAppName ? appName : null, // Store app name only when it exists
-                                    enabled, packageName, hasAppName)
+                                    packageName, enabled, hasAppName)
                     );
                 } catch (PackageManager.NameNotFoundException e) {
                     e.printStackTrace();
@@ -58,7 +60,7 @@ public class OverlayManager {
             }
         }
 
-        return list;
+        return newList;
     }
 
     public static void toggleOverlays(List<OverlayItem> list) {
@@ -75,8 +77,8 @@ public class OverlayManager {
 
     public static void toggleOverlays(List<OverlayItem> list, boolean state) {
         List<String> packages = new ArrayList<>();
-        for (OverlayItem overlay : list) {
-            packages.add(overlay.getPackageName());
+        for (RvItem item : list) {
+            packages.add(item.getPackageName());
         }
 
         AndromedaOverlayManager.INSTANCE.switchOverlay(packages, state);

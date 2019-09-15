@@ -33,7 +33,8 @@ import kyklab.overlaymanager.R;
 import kyklab.overlaymanager.overlay.OverlayAdapter;
 import kyklab.overlaymanager.overlay.OverlayInterface;
 import kyklab.overlaymanager.overlay.OverlayItem;
-import kyklab.overlaymanager.utils.OverlayManager;
+import kyklab.overlaymanager.overlay.RvItem;
+import kyklab.overlaymanager.utils.OverlayUtils;
 import kyklab.overlaymanager.utils.ThemeManager;
 import kyklab.overlaymanager.utils.ViewUtils;
 
@@ -43,7 +44,7 @@ public class MainActivity extends AppCompatActivity
     private static final long MINI_FAB_ANIM_LENGTH = 300L;
     private static final long MINI_FAB_ANIM_DELAY = 100L;
     private static final String TAG = "OVERLAY_MANAGER";
-    private final List<OverlayItem> overlayList = new ArrayList<>();
+    private final List<RvItem> list = new ArrayList<>();
     private float miniFabTransitionDistance;
     private FloatingActionButton[] miniFab;
     private CardView[] fabText;
@@ -103,14 +104,17 @@ public class MainActivity extends AppCompatActivity
     }
 
     private List<OverlayItem> getSelectedOverlays() {
-        List<OverlayItem> list = new ArrayList<>();
-        for (OverlayItem overlay : overlayList) {
-            if (overlay.getItemType() == OverlayItem.OVERLAY_ITEM_TYPE_ITEM
-                    && overlay.isItemChecked()) {
-                list.add(overlay);
+        List<OverlayItem> newList = new ArrayList<>();
+        OverlayItem overlay;
+        for (RvItem item : list) {
+            overlay = (OverlayItem) item;
+            if (item.getItemType() == RvItem.TYPE_OVERLAY) {
+                if (overlay.isItemChecked()) {
+                    newList.add(overlay);
+                }
             }
         }
-        return list;
+        return newList;
     }
 
     private void toggleSelectedOverlays() {
@@ -227,9 +231,9 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void toggleCheckAllOverlays() {
-        for (OverlayItem overlay : overlayList) {
-            if (overlay.getItemType() == OverlayItem.OVERLAY_ITEM_TYPE_ITEM) {
-                overlay.setItemChecked(!isAllChecked);
+        for (RvItem item : list) {
+            if (item.getItemType() == RvItem.TYPE_OVERLAY) {
+                ((OverlayItem) item).setItemChecked(!isAllChecked);
             }
         }
         isAllChecked = !isAllChecked;
@@ -262,7 +266,7 @@ public class MainActivity extends AppCompatActivity
         RecyclerView recyclerView = findViewById(R.id.recyclerView);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(linearLayoutManager);
-        adapter = new OverlayAdapter(this, this, overlayList);
+        adapter = new OverlayAdapter(this, this, list);
         recyclerView.setAdapter(adapter);
 //        recyclerView.addItemDecoration(new DividerItemDecoration(recyclerView.getContext(),
 //                linearLayoutManager.getOrientation()));
@@ -386,10 +390,10 @@ public class MainActivity extends AppCompatActivity
                 return null;
             }
 
-            List<OverlayItem> newList = OverlayManager.getOverlays();
+            List<RvItem> newList = OverlayUtils.getOverlayRvItems();
 
-            activity.overlayList.clear();
-            activity.overlayList.addAll(newList);
+            activity.list.clear();
+            activity.list.addAll(newList);
 
             return null;
         }
@@ -438,10 +442,10 @@ public class MainActivity extends AppCompatActivity
 
             if (state == null) {
                 // Toggle overlays' states, enabled -> disabled, disabled -> enabled
-                OverlayManager.toggleOverlays(list);
+                OverlayUtils.toggleOverlays(list);
             } else {
                 // Enable or disable overlays
-                OverlayManager.toggleOverlays(list, state);
+                OverlayUtils.toggleOverlays(list, state);
             }
 
             return null;
