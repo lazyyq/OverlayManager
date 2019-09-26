@@ -107,8 +107,8 @@ public class MainActivity extends AppCompatActivity
         List<OverlayItem> newList = new ArrayList<>();
         OverlayItem overlay;
         for (RvItem item : list) {
-            overlay = (OverlayItem) item;
             if (item.getItemType() == RvItem.TYPE_OVERLAY) {
+                overlay = (OverlayItem) item;
                 if (overlay.isItemChecked()) {
                     newList.add(overlay);
                 }
