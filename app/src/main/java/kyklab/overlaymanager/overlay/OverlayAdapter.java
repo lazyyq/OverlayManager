@@ -132,8 +132,8 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             int id = view.getId();
             switch (id) {
                 case R.id.categoryLayout:
-                    OverlayItem overlay = (OverlayItem) list.get(getAdapterPosition());
-                    String targetPackageName = overlay.getPackageName();
+                    TargetItem target = (TargetItem) list.get(getAdapterPosition());
+                    String targetPackageName = target.getPackageName();
                     AppUtils.openApplicationSettings(pActivity, targetPackageName);
                     break;
                 default:
