@@ -1,23 +1,28 @@
 package kyklab.overlaymanager.overlay;
 
+import android.graphics.drawable.Drawable;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.Objects;
 
 public class OverlayItem implements RvItem {
-    @Nullable private String appName;
-    @NonNull private String packageName;
+    @Nullable private final String appName;
+    @NonNull private final String packageName;
+    @NonNull private final Drawable icon;
+    private final boolean hasAppName;
     private boolean enabled;
-    private boolean hasAppName;
-    private boolean itemChecked = false;
+    private boolean itemChecked;
 
     public OverlayItem(@Nullable String appName, @NonNull String packageName,
-                       boolean enabled, boolean hasAppName) {
+                       @NonNull Drawable icon, boolean hasAppName, boolean enabled) {
         this.appName = appName;
         this.packageName = packageName;
-        this.enabled = enabled;
+        this.icon = icon;
         this.hasAppName = hasAppName;
+        this.enabled = enabled;
+        this.itemChecked = false;
     }
 
     @Override
@@ -26,24 +31,25 @@ public class OverlayItem implements RvItem {
     }
 
     @Override
+    @Nullable
     public String getAppName() {
         return hasAppName ? appName : packageName;
     }
 
     @Override
-    public void setAppName(@Nullable String appName) {
-        this.appName = appName;
-    }
-
     @NonNull
-    @Override
     public String getPackageName() {
         return packageName;
     }
 
     @Override
-    public void setPackageName(@NonNull String packageName) {
-        this.packageName = packageName;
+    @NonNull
+    public Drawable getIcon() {
+        return icon;
+    }
+
+    public boolean hasAppName() {
+        return hasAppName;
     }
 
     public boolean isEnabled() {
@@ -52,14 +58,6 @@ public class OverlayItem implements RvItem {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
-    }
-
-    public boolean hasAppName() {
-        return hasAppName;
-    }
-
-    public void setHasAppName(boolean hasAppName) {
-        this.hasAppName = hasAppName;
     }
 
     public boolean isItemChecked() {
@@ -75,15 +73,16 @@ public class OverlayItem implements RvItem {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         OverlayItem that = (OverlayItem) o;
-        return enabled == that.enabled &&
-                hasAppName == that.hasAppName &&
+        return hasAppName == that.hasAppName &&
+                enabled == that.enabled &&
                 itemChecked == that.itemChecked &&
                 Objects.equals(appName, that.appName) &&
-                packageName.equals(that.packageName);
+                packageName.equals(that.packageName) &&
+                icon.equals(that.icon);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(appName, packageName, enabled, hasAppName, itemChecked);
+        return Objects.hash(appName, packageName, icon, hasAppName, enabled, itemChecked);
     }
 }

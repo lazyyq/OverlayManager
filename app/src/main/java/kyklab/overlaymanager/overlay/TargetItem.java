@@ -1,17 +1,24 @@
 package kyklab.overlaymanager.overlay;
 
+import android.graphics.drawable.Drawable;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.Objects;
 
 public class TargetItem implements RvItem {
-    @Nullable private String appName;
-    @NonNull private String packageName;
+    @Nullable private final String appName;
+    @NonNull private final String packageName;
+    @NonNull private final Drawable icon;
+    private final boolean hasAppName;
 
-    public TargetItem(@Nullable String appName, @NonNull String packageName) {
+    public TargetItem(@Nullable String appName, @NonNull String packageName,
+                      @NonNull Drawable icon, boolean hasAppName) {
         this.appName = appName;
         this.packageName = packageName;
+        this.icon = icon;
+        this.hasAppName = hasAppName;
     }
 
     @Override
@@ -20,24 +27,25 @@ public class TargetItem implements RvItem {
     }
 
     @Override
+    @Nullable
     public String getAppName() {
-        return appName != null ? appName : packageName;
+        return hasAppName ? appName : packageName;
     }
 
     @Override
-    public void setAppName(@Nullable String appName) {
-        this.appName = appName;
-    }
-
     @NonNull
-    @Override
     public String getPackageName() {
         return packageName;
     }
 
     @Override
-    public void setPackageName(@NonNull String packageName) {
-        this.packageName = packageName;
+    @NonNull
+    public Drawable getIcon() {
+        return icon;
+    }
+
+    public boolean hasAppName() {
+        return hasAppName;
     }
 
     @Override
@@ -45,12 +53,14 @@ public class TargetItem implements RvItem {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         TargetItem that = (TargetItem) o;
-        return Objects.equals(appName, that.appName) &&
-                packageName.equals(that.packageName);
+        return hasAppName == that.hasAppName &&
+                Objects.equals(appName, that.appName) &&
+                packageName.equals(that.packageName) &&
+                icon.equals(that.icon);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(appName, packageName);
+        return Objects.hash(appName, packageName, icon, hasAppName);
     }
 }

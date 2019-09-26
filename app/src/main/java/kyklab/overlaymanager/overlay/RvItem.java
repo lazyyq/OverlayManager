@@ -1,5 +1,7 @@
 package kyklab.overlaymanager.overlay;
 
+import android.graphics.drawable.Drawable;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -12,10 +14,9 @@ public interface RvItem {
     @Nullable
     String getAppName();
 
-    void setAppName(String appName);
-
     @NonNull
     String getPackageName();
 
-    void setPackageName(String packageName);
+    @NonNull
+    Drawable getIcon();
 }

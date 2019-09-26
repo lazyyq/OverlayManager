@@ -1,8 +1,9 @@
 package kyklab.overlaymanager.utils;
 
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
-import android.widget.Toast;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,10 +18,13 @@ import projekt.andromeda.client.AndromedaOverlayManager;
 import projekt.andromeda.client.util.OverlayInfo;
 
 public class OverlayUtils {
+    private static final String TAG = "OverlayUtils";
+
     public static List<RvItem> getOverlayRvItems() {
         List<RvItem> newList = new ArrayList<>();
 
-        String appName;
+        String appName = null;
+        Drawable icon;
         boolean enabled;
         String packageName = null;
         String targetAppName;
@@ -33,29 +37,32 @@ public class OverlayUtils {
             targetPackageName = entry.getKey();
             try {
                 targetAppName = AppUtils.getApplicationName(App.getContext(), targetPackageName);
+                icon = AppUtils.getApplicationIcon(App.getContext(), targetPackageName);
             } catch (PackageManager.NameNotFoundException e) {
-                targetAppName = targetPackageName;
+                e.printStackTrace();
+                Log.e(TAG, "Error while loading category " + packageName);
+                continue;
             }
-            newList.add(new TargetItem(targetAppName, targetPackageName));
+            hasAppName = !TextUtils.equals(appName, packageName);
+
+            newList.add(new TargetItem(targetAppName, targetPackageName, icon, hasAppName));
 
             for (OverlayInfo overlay : entry.getValue()) {
                 try {
                     packageName = overlay.getPackageName(); // Package name
                     appName = AppUtils.getApplicationName(App.getContext(), packageName); // App name
+                    icon = AppUtils.getApplicationIcon(App.getContext(), packageName); // App icon
                     enabled = overlay.isEnabled(); // Enabled
                     hasAppName = !TextUtils.equals(appName, packageName); // Has its own app name
 
                     newList.add(
                             new OverlayItem(
                                     hasAppName ? appName : null, // Store app name only when it exists
-                                    packageName, enabled, hasAppName)
+                                    packageName, icon, hasAppName, enabled)
                     );
                 } catch (PackageManager.NameNotFoundException e) {
                     e.printStackTrace();
-                    Toast.makeText(App.getContext(),
-                            "Error while loading app " + packageName,
-                            Toast.LENGTH_SHORT)
-                            .show();
+                    Log.e(TAG, "Error while loading overlay " + packageName);
                 }
             }
         }

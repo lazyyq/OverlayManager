@@ -1,7 +1,6 @@
 package kyklab.overlaymanager.overlay;
 
 import android.app.Activity;
-import android.content.pm.PackageManager;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -60,26 +59,18 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             TargetItem target = (TargetItem) list.get(position);
             OverlayCategoryHolder overlayCategoryHolder = (OverlayCategoryHolder) holder;
             // Load category icon
-            try {
-                Glide.with(pActivity)
-                        .load(AppUtils.getApplicationIcon(pActivity, target.getPackageName()))
-                        .into(overlayCategoryHolder.categoryIconView);
-            } catch (PackageManager.NameNotFoundException e) {
-                e.printStackTrace();
-            }
+            Glide.with(pActivity)
+                    .load(target.getIcon())
+                    .into(overlayCategoryHolder.categoryIconView);
             // Set category name
             overlayCategoryHolder.categoryNameView.setText(target.getAppName());
         } else {
             OverlayItem overlay = (OverlayItem) list.get(position);
             OverlayItemHolder overlayItemHolder = (OverlayItemHolder) holder;
             // Load app icon
-            try {
-                Glide.with(pActivity)
-                        .load(AppUtils.getApplicationIcon(pActivity, overlay.getPackageName()))
-                        .into(overlayItemHolder.iconView);
-            } catch (PackageManager.NameNotFoundException e) {
-                e.printStackTrace();
-            }
+            Glide.with(pActivity)
+                    .load(overlay.getIcon())
+                    .into(overlayItemHolder.iconView);
             // If app name == package name, give smaller space for appNameView
             if (!overlay.hasAppName()) {
                 overlayItemHolder.appNameView.setSingleLine(true);
