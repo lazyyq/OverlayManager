@@ -2,9 +2,13 @@ package kyklab.overlaymanager.ui;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -27,16 +31,25 @@ import com.google.android.material.snackbar.Snackbar;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
+import kyklab.overlaymanager.App;
 import kyklab.overlaymanager.R;
 import kyklab.overlaymanager.overlay.OverlayAdapter;
 import kyklab.overlaymanager.overlay.OverlayInterface;
 import kyklab.overlaymanager.overlay.OverlayItem;
 import kyklab.overlaymanager.overlay.RvItem;
+import kyklab.overlaymanager.overlay.TargetItem;
+import kyklab.overlaymanager.utils.AppUtils;
 import kyklab.overlaymanager.utils.OverlayUtils;
 import kyklab.overlaymanager.utils.ThemeManager;
+import kyklab.overlaymanager.utils.Utils;
 import kyklab.overlaymanager.utils.ViewUtils;
+import projekt.andromeda.client.AndromedaOverlayManager;
+import projekt.andromeda.client.util.OverlayInfo;
 
 public class MainActivity extends AppCompatActivity
         implements OverlayInterface, View.OnClickListener, View.OnTouchListener {
@@ -74,8 +87,28 @@ public class MainActivity extends AppCompatActivity
 
         setupFab();
         initRefreshLayout();
-        updateOverlayList();
         setRecyclerView();
+        updateOverlayList();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (Utils.taskNeedsResume(mUpdateTask)) {
+            updateOverlayList();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        if (Utils.isTaskRunning(mUpdateTask)) {
+            mUpdateTask.cancel(true);
+        }
+        if (Utils.isTaskRunning(mToggleTask)) {
+            mToggleTask.cancel(true);
+        }
     }
 
     private void setupFab() {
@@ -138,8 +171,10 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
-        mToggleTask = new ToggleTask(this, list, null);
-        mToggleTask.execute();
+        if (Utils.isTaskExecutable(mToggleTask)) {
+            mToggleTask = new ToggleTask(this, list, null);
+            mToggleTask.execute();
+        }
     }
 
     @Override
@@ -153,8 +188,10 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
-        mToggleTask = new ToggleTask(this, list, state);
-        mToggleTask.execute();
+        if (Utils.isTaskExecutable(mToggleTask)) {
+            mToggleTask = new ToggleTask(this, list, state);
+            mToggleTask.execute();
+        }
     }
 
     @SuppressLint("RestrictedApi")
@@ -179,18 +216,6 @@ public class MainActivity extends AppCompatActivity
                 mFabText, 0, mMiniFabTransitionDistance, MINI_FAB_ANIM_LENGTH, MINI_FAB_ANIM_DELAY
         );
         mFab.setExpanded(false);
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-
-        if (mUpdateTask != null) {
-            mUpdateTask.cancel(true);
-        }
-        if (mToggleTask != null) {
-            mToggleTask.cancel(true);
-        }
     }
 
     @SuppressLint("SwitchIntDef")
@@ -258,18 +283,17 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void updateOverlayList() {
-        mUpdateTask = new UpdateTask(this);
-        mUpdateTask.execute();
+        if (Utils.isTaskExecutable(mUpdateTask)) {
+            mUpdateTask = new UpdateTask(this);
+            mUpdateTask.execute();
+        }
     }
 
     private void setRecyclerView() {
         RecyclerView recyclerView = findViewById(R.id.recyclerView);
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(linearLayoutManager);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
         mAdapter = new OverlayAdapter(this, this, mList);
         recyclerView.setAdapter(mAdapter);
-//        recyclerView.addItemDecoration(new DividerItemDecoration(recyclerView.getContext(),
-//                linearLayoutManager.getOrientation()));
     }
 
     private void blockScreen() {
@@ -365,7 +389,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private static class UpdateTask extends AsyncTask<Void, Void, Void> {
+    private static class UpdateTask extends AsyncTask<Void, Integer, Void> {
         private final WeakReference<MainActivity> activityWeakReference;
 
         UpdateTask(MainActivity activity) {
@@ -374,38 +398,104 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         protected void onPreExecute() {
-            MainActivity activity = activityWeakReference.get();
+            final MainActivity activity = activityWeakReference.get();
             if (activity == null || activity.isFinishing()) {
                 return;
             }
 
             activity.blockScreen();
             activity.showProgressBar();
+            activity.mAdapter.notifyItemRangeRemoved(0, activity.mList.size());
         }
 
         @Override
         protected Void doInBackground(Void... voids) {
-            MainActivity activity = activityWeakReference.get();
+            final MainActivity activity = activityWeakReference.get();
             if (activity == null || activity.isFinishing()) {
                 return null;
             }
 
-            List<RvItem> newList = OverlayUtils.getOverlayRvItems();
+            List<RvItem> list = activity.mList;
+            list.clear();
 
-            activity.mList.clear();
-            activity.mList.addAll(newList);
+            String appName;
+            Drawable icon;
+            boolean enabled;
+            String packageName = null;
+            String targetAppName;
+            String targetPackageName;
+            boolean hasAppName;
+
+            int adapterPosition = 0;
+
+            Comparator<String> comparator = new Comparator<String>() {
+                @Override
+                public int compare(String o1, String o2) {
+                    try {
+                        return AppUtils.getApplicationName(activity, o1)
+                                .compareTo(AppUtils.getApplicationName(activity, o2));
+                    } catch (PackageManager.NameNotFoundException e) {
+                        e.printStackTrace();
+                        return 0;
+                    }
+                }
+            };
+            Map<String, List<OverlayInfo>> map = new TreeMap<>(comparator);
+            map.putAll(AndromedaOverlayManager.INSTANCE.getAllOverlay());
+
+            for (Map.Entry<String, List<OverlayInfo>> entry : map.entrySet()) {
+                targetPackageName = entry.getKey();
+                try {
+                    targetAppName = AppUtils.getApplicationName(App.getContext(), targetPackageName);
+                    icon = AppUtils.getApplicationIcon(App.getContext(), targetPackageName);
+                } catch (PackageManager.NameNotFoundException e) {
+                    e.printStackTrace();
+                    Log.e(TAG, "Error while loading category " + packageName);
+                    continue;
+                }
+                hasAppName = !TextUtils.equals(targetAppName, packageName);
+
+                list.add(new TargetItem(targetAppName, targetPackageName, icon, hasAppName));
+                publishProgress(adapterPosition++);
+
+                for (OverlayInfo overlay : entry.getValue()) {
+                    try {
+                        packageName = overlay.getPackageName(); // Package name
+                        appName = AppUtils.getApplicationName(App.getContext(), packageName); // App name
+                        icon = AppUtils.getApplicationIcon(App.getContext(), packageName); // App icon
+                        enabled = overlay.isEnabled(); // Enabled
+                        hasAppName = !TextUtils.equals(appName, packageName); // Has its own app name
+
+                        list.add(new OverlayItem(hasAppName ? appName : null, // Store app name only when it exists
+                                packageName, icon, hasAppName, enabled));
+                        publishProgress(adapterPosition++);
+                    } catch (PackageManager.NameNotFoundException e) {
+                        e.printStackTrace();
+                        Log.e(TAG, "Error while loading overlay " + packageName);
+                    }
+                }
+            }
 
             return null;
         }
 
         @Override
-        protected void onPostExecute(Void aVoid) {
-            MainActivity activity = activityWeakReference.get();
+        protected void onProgressUpdate(Integer... values) {
+            final MainActivity activity = activityWeakReference.get();
             if (activity == null || activity.isFinishing()) {
                 return;
             }
 
-            activity.mAdapter.notifyDataSetChanged();
+            activity.mAdapter.notifyItemChanged(values[0]);
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            final MainActivity activity = activityWeakReference.get();
+            if (activity == null || activity.isFinishing()) {
+                return;
+            }
+
             activity.releaseScreen();
             activity.hideProgressBar();
         }
@@ -424,7 +514,7 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         protected void onPreExecute() {
-            MainActivity activity = activityWeakReference.get();
+            final MainActivity activity = activityWeakReference.get();
             if (activity == null || activity.isFinishing()) {
                 return;
             }
@@ -435,7 +525,7 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         protected Void doInBackground(Void... voids) {
-            MainActivity activity = activityWeakReference.get();
+            final MainActivity activity = activityWeakReference.get();
             if (activity == null || activity.isFinishing()) {
                 return null;
             }
@@ -453,7 +543,7 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            MainActivity activity = activityWeakReference.get();
+            final MainActivity activity = activityWeakReference.get();
             if (activity == null || activity.isFinishing()) {
                 return;
             }
