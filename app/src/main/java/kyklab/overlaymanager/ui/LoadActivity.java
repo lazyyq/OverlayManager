@@ -19,14 +19,14 @@ import projekt.andromeda.client.AndromedaClient;
 public class LoadActivity extends AppCompatActivity implements View.OnClickListener {
     private static final int ANDROMEDA_REQ_CODE_PERMISSION = 14045;
 
-    private TextView andromedaWarning;
+    private TextView mAndromedaWarning;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_load);
 
-        andromedaWarning = findViewById(R.id.andromedaWarningBody);
+        mAndromedaWarning = findViewById(R.id.andromedaWarningBody);
         ImageButton retryAndromeda = findViewById(R.id.retryAndromeda);
         retryAndromeda.setOnClickListener(this);
 
@@ -38,7 +38,7 @@ public class LoadActivity extends AppCompatActivity implements View.OnClickListe
             // Already has permission
             startAppIfAndromedaActive();
         } else {
-            andromedaWarning.setText(R.string.andromeda_denied);
+            mAndromedaWarning.setText(R.string.andromeda_denied);
             askAndromedaPermission();
         }
     }
@@ -69,7 +69,7 @@ public class LoadActivity extends AppCompatActivity implements View.OnClickListe
         } catch (SecurityException e) {
             e.printStackTrace();
             Log.e("ANDROMEDA", "crashed while run");
-            andromedaWarning.setText(R.string.andromeda_crashed);
+            mAndromedaWarning.setText(R.string.andromeda_crashed);
         }
     }
 

@@ -44,19 +44,19 @@ public class MainActivity extends AppCompatActivity
     private static final long MINI_FAB_ANIM_LENGTH = 300L;
     private static final long MINI_FAB_ANIM_DELAY = 100L;
     private static final String TAG = "OVERLAY_MANAGER";
-    private final List<RvItem> list = new ArrayList<>();
-    private float miniFabTransitionDistance;
-    private FloatingActionButton[] miniFab;
-    private CardView[] fabText;
-    private View fabBackground;
-    private View backgroundBlocker;
-    private CoordinatorLayout coordinatorLayout;
-    private boolean isAllChecked;
-    private OverlayAdapter adapter;
-    private UpdateTask updateTask = null;
-    private ToggleTask toggleTask = null;
-    private ProgressBar progressBar;
-    private FloatingActionButton fab;
+    private final List<RvItem> mList = new ArrayList<>();
+    private float mMiniFabTransitionDistance;
+    private FloatingActionButton[] mMiniFab;
+    private CardView[] mFabText;
+    private View mFabBackground;
+    private View mBackgroundBlocker;
+    private CoordinatorLayout mCoordinatorLayout;
+    private boolean mIsAllChecked;
+    private OverlayAdapter mAdapter;
+    private UpdateTask mUpdateTask = null;
+    private ToggleTask mToggleTask = null;
+    private ProgressBar mProgressBar;
+    private FloatingActionButton mFab;
     //private String removedApp;
 
     @SuppressLint("RestrictedApi")
@@ -68,9 +68,9 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        coordinatorLayout = findViewById(R.id.coordinatorLayout);
-        progressBar = findViewById(R.id.progressBar);
-        backgroundBlocker = findViewById(R.id.backgroundBlocker);
+        mCoordinatorLayout = findViewById(R.id.coordinatorLayout);
+        mProgressBar = findViewById(R.id.progressBar);
+        mBackgroundBlocker = findViewById(R.id.backgroundBlocker);
 
         setupFab();
         initRefreshLayout();
@@ -80,33 +80,33 @@ public class MainActivity extends AppCompatActivity
 
     private void setupFab() {
         float fabSizeNormal = getResources().getDimension(R.dimen.fab_size_normal);
-        miniFabTransitionDistance = getResources().getDimension(R.dimen.mini_fab_transition_distance);
+        mMiniFabTransitionDistance = getResources().getDimension(R.dimen.mini_fab_transition_distance);
 
         ConstraintLayout miniFabContainer = findViewById(R.id.miniFabContainer);
         miniFabContainer.setPadding(
-                0, 0, 0, (int) (fabSizeNormal - miniFabTransitionDistance));
+                0, 0, 0, (int) (fabSizeNormal - mMiniFabTransitionDistance));
 
-        fabText = new CardView[]{
+        mFabText = new CardView[]{
                 findViewById(R.id.fabTextCardToggle), findViewById(R.id.fabTextCardEnable), findViewById(R.id.fabTextCardDisable)
         };
-        miniFab = new FloatingActionButton[]{
+        mMiniFab = new FloatingActionButton[]{
                 findViewById(R.id.miniFabToggle), findViewById(R.id.miniFabEnable), findViewById(R.id.miniFabDisable)
         };
 
-        fab = findViewById(R.id.fab);
-        fab.setOnClickListener(this);
-        for (FloatingActionButton miniFab : miniFab) {
+        mFab = findViewById(R.id.fab);
+        mFab.setOnClickListener(this);
+        for (FloatingActionButton miniFab : mMiniFab) {
             miniFab.setOnClickListener(this);
         }
 
-        fabBackground = findViewById(R.id.fabBackground);
-        fabBackground.setOnTouchListener(this);
+        mFabBackground = findViewById(R.id.fabBackground);
+        mFabBackground.setOnTouchListener(this);
     }
 
     private List<OverlayItem> getSelectedOverlays() {
         List<OverlayItem> newList = new ArrayList<>();
         OverlayItem overlay;
-        for (RvItem item : list) {
+        for (RvItem item : mList) {
             if (item.getItemType() == RvItem.TYPE_OVERLAY) {
                 overlay = (OverlayItem) item;
                 if (overlay.isItemChecked()) {
@@ -130,7 +130,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void toggleOverlays(List<OverlayItem> list) {
         if (list.isEmpty()) {
-            Snackbar.make(coordinatorLayout,
+            Snackbar.make(mCoordinatorLayout,
                     R.string.nothing_selected,
                     Snackbar.LENGTH_SHORT)
                     .setAction(android.R.string.ok, this)
@@ -138,14 +138,14 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
-        toggleTask = new ToggleTask(this, list, null);
-        toggleTask.execute();
+        mToggleTask = new ToggleTask(this, list, null);
+        mToggleTask.execute();
     }
 
     @Override
     public void toggleOverlays(List<OverlayItem> list, boolean state) {
         if (list.isEmpty()) {
-            Snackbar.make(coordinatorLayout,
+            Snackbar.make(mCoordinatorLayout,
                     R.string.nothing_selected,
                     Snackbar.LENGTH_SHORT)
                     .setAction(android.R.string.ok, this)
@@ -153,43 +153,43 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
-        toggleTask = new ToggleTask(this, list, state);
-        toggleTask.execute();
+        mToggleTask = new ToggleTask(this, list, state);
+        mToggleTask.execute();
     }
 
     @SuppressLint("RestrictedApi")
     private void expandFab() {
-        fabBackground.setVisibility(View.VISIBLE);
+        mFabBackground.setVisibility(View.VISIBLE);
         ViewUtils.animateShowInOrder(
-                miniFab, 0, -miniFabTransitionDistance, MINI_FAB_ANIM_LENGTH, MINI_FAB_ANIM_DELAY
+                mMiniFab, 0, -mMiniFabTransitionDistance, MINI_FAB_ANIM_LENGTH, MINI_FAB_ANIM_DELAY
         );
         ViewUtils.animateShowInOrder(
-                fabText, 0, -miniFabTransitionDistance, MINI_FAB_ANIM_LENGTH, MINI_FAB_ANIM_DELAY
+                mFabText, 0, -mMiniFabTransitionDistance, MINI_FAB_ANIM_LENGTH, MINI_FAB_ANIM_DELAY
         );
-        fab.setExpanded(true);
+        mFab.setExpanded(true);
     }
 
     @SuppressLint("RestrictedApi")
     private void collapseFab() {
-        fabBackground.setVisibility(View.GONE);
+        mFabBackground.setVisibility(View.GONE);
         ViewUtils.animateHideInOrder(
-                miniFab, 0, miniFabTransitionDistance, MINI_FAB_ANIM_LENGTH, MINI_FAB_ANIM_DELAY
+                mMiniFab, 0, mMiniFabTransitionDistance, MINI_FAB_ANIM_LENGTH, MINI_FAB_ANIM_DELAY
         );
         ViewUtils.animateHideInOrder(
-                fabText, 0, miniFabTransitionDistance, MINI_FAB_ANIM_LENGTH, MINI_FAB_ANIM_DELAY
+                mFabText, 0, mMiniFabTransitionDistance, MINI_FAB_ANIM_LENGTH, MINI_FAB_ANIM_DELAY
         );
-        fab.setExpanded(false);
+        mFab.setExpanded(false);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
 
-        if (updateTask != null) {
-            updateTask.cancel(true);
+        if (mUpdateTask != null) {
+            mUpdateTask.cancel(true);
         }
-        if (toggleTask != null) {
-            toggleTask.cancel(true);
+        if (mToggleTask != null) {
+            mToggleTask.cancel(true);
         }
     }
 
@@ -231,13 +231,13 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void toggleCheckAllOverlays() {
-        for (RvItem item : list) {
+        for (RvItem item : mList) {
             if (item.getItemType() == RvItem.TYPE_OVERLAY) {
-                ((OverlayItem) item).setItemChecked(!isAllChecked);
+                ((OverlayItem) item).setItemChecked(!mIsAllChecked);
             }
         }
-        isAllChecked = !isAllChecked;
-        adapter.notifyDataSetChanged();
+        mIsAllChecked = !mIsAllChecked;
+        mAdapter.notifyDataSetChanged();
     }
 
     private void switchTheme() {
@@ -258,44 +258,44 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void updateOverlayList() {
-        updateTask = new UpdateTask(this);
-        updateTask.execute();
+        mUpdateTask = new UpdateTask(this);
+        mUpdateTask.execute();
     }
 
     private void setRecyclerView() {
         RecyclerView recyclerView = findViewById(R.id.recyclerView);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(linearLayoutManager);
-        adapter = new OverlayAdapter(this, this, list);
-        recyclerView.setAdapter(adapter);
+        mAdapter = new OverlayAdapter(this, this, mList);
+        recyclerView.setAdapter(mAdapter);
 //        recyclerView.addItemDecoration(new DividerItemDecoration(recyclerView.getContext(),
 //                linearLayoutManager.getOrientation()));
     }
 
     private void blockScreen() {
-        backgroundBlocker.setVisibility(View.VISIBLE);
+        mBackgroundBlocker.setVisibility(View.VISIBLE);
     }
 
     private void releaseScreen() {
-        backgroundBlocker.setVisibility(View.GONE);
+        mBackgroundBlocker.setVisibility(View.GONE);
     }
 
     private void hideProgressBar() {
-        progressBar.setVisibility(View.GONE);
+        mProgressBar.setVisibility(View.GONE);
     }
 
     private void showProgressBar() {
-        progressBar.setVisibility(View.VISIBLE);
+        mProgressBar.setVisibility(View.VISIBLE);
     }
 
     @Override
     public boolean isAllChecked() {
-        return isAllChecked;
+        return mIsAllChecked;
     }
 
     @Override
     public void setAllChecked(boolean isAllChecked) {
-        this.isAllChecked = isAllChecked;
+        this.mIsAllChecked = isAllChecked;
     }
 
     @Override
@@ -311,7 +311,7 @@ public class MainActivity extends AppCompatActivity
         int id = view.getId();
         switch (id) {
             case R.id.fab:
-                if (fab.isExpanded()) {
+                if (mFab.isExpanded()) {
                     collapseFab();
                 } else {
                     expandFab();
@@ -392,8 +392,8 @@ public class MainActivity extends AppCompatActivity
 
             List<RvItem> newList = OverlayUtils.getOverlayRvItems();
 
-            activity.list.clear();
-            activity.list.addAll(newList);
+            activity.mList.clear();
+            activity.mList.addAll(newList);
 
             return null;
         }
@@ -405,7 +405,7 @@ public class MainActivity extends AppCompatActivity
                 return;
             }
 
-            activity.adapter.notifyDataSetChanged();
+            activity.mAdapter.notifyDataSetChanged();
             activity.releaseScreen();
             activity.hideProgressBar();
         }
@@ -461,7 +461,7 @@ public class MainActivity extends AppCompatActivity
             activity.releaseScreen();
             activity.hideProgressBar();
             activity.updateOverlayList();
-            Snackbar.make(activity.coordinatorLayout,
+            Snackbar.make(activity.mCoordinatorLayout,
                     R.string.selected_toggle_complete,
                     Snackbar.LENGTH_SHORT)
                     .setAction(android.R.string.ok, activity)
