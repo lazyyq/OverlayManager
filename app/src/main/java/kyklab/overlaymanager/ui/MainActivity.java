@@ -34,7 +34,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import kyklab.overlaymanager.App;
 import kyklab.overlaymanager.R;
@@ -57,7 +59,8 @@ public class MainActivity extends AppCompatActivity
     private static final long MINI_FAB_ANIM_LENGTH = 300L;
     private static final long MINI_FAB_ANIM_DELAY = 100L;
     private static final String TAG = "OVERLAY_MANAGER";
-    private final List<RvItem> mList = new ArrayList<>();
+    private List<RvItem> mOverlaysList;
+    private Set<Integer> mSelectedIndexes;
     private float mMiniFabTransitionDistance;
     private FloatingActionButton[] mMiniFab;
     private CardView[] mFabText;
@@ -66,11 +69,10 @@ public class MainActivity extends AppCompatActivity
     private CoordinatorLayout mCoordinatorLayout;
     private boolean mIsAllChecked;
     private OverlayAdapter mAdapter;
-    private UpdateTask mUpdateTask = null;
-    private ToggleTask mToggleTask = null;
+    private RefreshListTask mRefreshListTask;
+    private ToggleOverlayTask mToggleOverlayTask;
     private ProgressBar mProgressBar;
     private FloatingActionButton mFab;
-    //private String removedApp;
 
     @SuppressLint("RestrictedApi")
     @Override
@@ -81,6 +83,10 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        mOverlaysList = new ArrayList<>();
+        mSelectedIndexes = new TreeSet<>();
+        mRefreshListTask = null;
+        mToggleOverlayTask = null;
         mCoordinatorLayout = findViewById(R.id.coordinatorLayout);
         mProgressBar = findViewById(R.id.progressBar);
         mBackgroundBlocker = findViewById(R.id.backgroundBlocker);
@@ -94,7 +100,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
-        if (Utils.taskNeedsResume(mUpdateTask)) {
+        if (Utils.taskNeedsResume(mRefreshListTask)) {
             updateOverlayList();
         }
     }
@@ -103,11 +109,11 @@ public class MainActivity extends AppCompatActivity
     protected void onPause() {
         super.onPause();
 
-        if (Utils.isTaskRunning(mUpdateTask)) {
-            mUpdateTask.cancel(true);
+        if (Utils.isTaskRunning(mRefreshListTask)) {
+            mRefreshListTask.cancel(true);
         }
-        if (Utils.isTaskRunning(mToggleTask)) {
-            mToggleTask.cancel(true);
+        if (Utils.isTaskRunning(mToggleOverlayTask)) {
+            mToggleOverlayTask.cancel(true);
         }
     }
 
@@ -136,33 +142,13 @@ public class MainActivity extends AppCompatActivity
         mFabBackground.setOnTouchListener(this);
     }
 
-    private List<OverlayItem> getSelectedOverlays() {
-        List<OverlayItem> newList = new ArrayList<>();
-        OverlayItem overlay;
-        for (RvItem item : mList) {
-            if (item.getItemType() == RvItem.TYPE_OVERLAY) {
-                overlay = (OverlayItem) item;
-                if (overlay.isItemChecked()) {
-                    newList.add(overlay);
-                }
-            }
-        }
-        return newList;
-    }
-
-    private void toggleSelectedOverlays() {
-        List<OverlayItem> list = getSelectedOverlays();
-        toggleOverlays(list);
-    }
-
-    private void toggleSelectedOverlays(boolean state) {
-        List<OverlayItem> list = getSelectedOverlays();
-        toggleOverlays(list, state);
+    private void toggleSelectedOverlays(@Nullable Boolean newState) {
+        toggleOverlays(mSelectedIndexes, newState, true);
     }
 
     @Override
-    public void toggleOverlays(List<OverlayItem> list) {
-        if (list.isEmpty()) {
+    public void toggleOverlays(Set<Integer> indexes, @Nullable Boolean newState, boolean resetCheckState) {
+        if (indexes.isEmpty()) {
             Snackbar.make(mCoordinatorLayout,
                     R.string.nothing_selected,
                     Snackbar.LENGTH_SHORT)
@@ -171,26 +157,9 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
-        if (Utils.isTaskExecutable(mToggleTask)) {
-            mToggleTask = new ToggleTask(this, list, null);
-            mToggleTask.execute();
-        }
-    }
-
-    @Override
-    public void toggleOverlays(List<OverlayItem> list, boolean state) {
-        if (list.isEmpty()) {
-            Snackbar.make(mCoordinatorLayout,
-                    R.string.nothing_selected,
-                    Snackbar.LENGTH_SHORT)
-                    .setAction(android.R.string.ok, this)
-                    .show();
-            return;
-        }
-
-        if (Utils.isTaskExecutable(mToggleTask)) {
-            mToggleTask = new ToggleTask(this, list, state);
-            mToggleTask.execute();
+        if (Utils.isTaskExecutable(mToggleOverlayTask)) {
+            mToggleOverlayTask = new ToggleOverlayTask(this, indexes, newState, resetCheckState);
+            mToggleOverlayTask.execute();
         }
     }
 
@@ -256,13 +225,28 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void toggleCheckAllOverlays() {
-        for (RvItem item : mList) {
+        if (mIsAllChecked) {
+            mSelectedIndexes.clear();
+        }
+
+        // Set new checked state for all items
+        // and add to selected indexes set if we're in 'check all' mode
+        Bundle b = new Bundle();
+        b.putBoolean(OverlayItem.Payload.CHECKED_STATE, !mIsAllChecked);
+        for (int i = 0; i < mOverlaysList.size(); ++i) {
+            RvItem item = mOverlaysList.get(i);
             if (item.getItemType() == RvItem.TYPE_OVERLAY) {
-                ((OverlayItem) item).setItemChecked(!mIsAllChecked);
+                // This updates only the items currently visible on screen,
+                // so we need to block the checkbox listener temporarily
+                // and change its checked state only.
+                mAdapter.notifyItemChanged(i, b);
+                if (!mIsAllChecked) {
+                    mSelectedIndexes.add(i);
+                }
             }
         }
+
         mIsAllChecked = !mIsAllChecked;
-        mAdapter.notifyDataSetChanged();
     }
 
     private void switchTheme() {
@@ -283,16 +267,16 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void updateOverlayList() {
-        if (Utils.isTaskExecutable(mUpdateTask)) {
-            mUpdateTask = new UpdateTask(this);
-            mUpdateTask.execute();
+        if (Utils.isTaskExecutable(mRefreshListTask)) {
+            mRefreshListTask = new RefreshListTask(this);
+            mRefreshListTask.execute();
         }
     }
 
     private void setRecyclerView() {
         RecyclerView recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        mAdapter = new OverlayAdapter(this, this, mList);
+        mAdapter = new OverlayAdapter(this, this, mOverlaysList);
         recyclerView.setAdapter(mAdapter);
     }
 
@@ -313,13 +297,18 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public boolean isAllChecked() {
-        return mIsAllChecked;
+    public boolean isChecked(int index) {
+        return mSelectedIndexes.contains(index);
     }
 
     @Override
-    public void setAllChecked(boolean isAllChecked) {
-        this.mIsAllChecked = isAllChecked;
+    public void setChecked(int index, boolean checked) {
+        if (checked) {
+            mSelectedIndexes.add(index);
+        } else {
+            mSelectedIndexes.remove(index);
+            mIsAllChecked = false;
+        }
     }
 
     @Override
@@ -343,7 +332,7 @@ public class MainActivity extends AppCompatActivity
                 break;
             case R.id.miniFabToggle:
                 collapseFab();
-                toggleSelectedOverlays();
+                toggleSelectedOverlays(null);
                 break;
             case R.id.miniFabEnable:
                 collapseFab();
@@ -352,8 +341,6 @@ public class MainActivity extends AppCompatActivity
             case R.id.miniFabDisable:
                 collapseFab();
                 toggleSelectedOverlays(false);
-                break;
-            default:
                 break;
         }
     }
@@ -368,8 +355,6 @@ public class MainActivity extends AppCompatActivity
                     collapseFab();
                 }
                 view.performClick();
-                break;
-            default:
                 break;
         }
 
@@ -389,10 +374,10 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private static class UpdateTask extends AsyncTask<Void, Integer, Void> {
+    private static class RefreshListTask extends AsyncTask<Void, Integer, Void> {
         private final WeakReference<MainActivity> activityWeakReference;
 
-        UpdateTask(MainActivity activity) {
+        RefreshListTask(MainActivity activity) {
             this.activityWeakReference = new WeakReference<>(activity);
         }
 
@@ -405,7 +390,9 @@ public class MainActivity extends AppCompatActivity
 
             activity.blockScreen();
             activity.showProgressBar();
-            activity.mAdapter.notifyItemRangeRemoved(0, activity.mList.size());
+            activity.mAdapter.notifyItemRangeRemoved(0, activity.mOverlaysList.size());
+            activity.mSelectedIndexes.clear();
+            activity.mIsAllChecked = false;
         }
 
         @Override
@@ -415,20 +402,10 @@ public class MainActivity extends AppCompatActivity
                 return null;
             }
 
-            List<RvItem> list = activity.mList;
+            List<RvItem> list = activity.mOverlaysList;
             list.clear();
 
-            String appName;
-            Drawable icon;
-            boolean enabled;
-            String packageName = null;
-            String targetAppName;
-            String targetPackageName;
-            boolean hasAppName;
-
-            int adapterPosition = 0;
-
-            Comparator<String> comparator = new Comparator<String>() {
+            Map<String, List<OverlayInfo>> map = new TreeMap<>(new Comparator<String>() {
                 @Override
                 public int compare(String o1, String o2) {
                     try {
@@ -439,41 +416,50 @@ public class MainActivity extends AppCompatActivity
                         return 0;
                     }
                 }
-            };
-            Map<String, List<OverlayInfo>> map = new TreeMap<>(comparator);
+            });
             map.putAll(AndromedaOverlayManager.INSTANCE.getAllOverlay());
 
+            int adapterPosition = 0;
             for (Map.Entry<String, List<OverlayInfo>> entry : map.entrySet()) {
-                targetPackageName = entry.getKey();
+                // ===== Start fetching target item =====
+                final String targetPackageName = entry.getKey();
+                final String targetAppName;
+                final Drawable targetAppIcon;
                 try {
                     targetAppName = AppUtils.getApplicationName(App.getContext(), targetPackageName);
-                    icon = AppUtils.getApplicationIcon(App.getContext(), targetPackageName);
+                    targetAppIcon = AppUtils.getApplicationIcon(App.getContext(), targetPackageName);
                 } catch (PackageManager.NameNotFoundException e) {
                     e.printStackTrace();
-                    Log.e(TAG, "Error while loading category " + packageName);
+                    Log.e(TAG, "Error while loading category " + targetPackageName);
                     continue;
                 }
-                hasAppName = !TextUtils.equals(targetAppName, packageName);
+                final boolean targetHasAppName = !TextUtils.equals(targetAppName, targetPackageName);
 
-                list.add(new TargetItem(targetAppName, targetPackageName, icon, hasAppName));
+                list.add(new TargetItem(targetAppName, targetPackageName, targetAppIcon, targetHasAppName));
                 publishProgress(adapterPosition++);
+                // ===== Done fetching target item =====
 
+                // ===== Start fetching overlay item =====
                 for (OverlayInfo overlay : entry.getValue()) {
+                    final String overlayPackageName = overlay.getPackageName(); // Package name
+                    final String overlayAppName;
+                    final Drawable overlayAppIcon;
                     try {
-                        packageName = overlay.getPackageName(); // Package name
-                        appName = AppUtils.getApplicationName(App.getContext(), packageName); // App name
-                        icon = AppUtils.getApplicationIcon(App.getContext(), packageName); // App icon
-                        enabled = overlay.isEnabled(); // Enabled
-                        hasAppName = !TextUtils.equals(appName, packageName); // Has its own app name
-
-                        list.add(new OverlayItem(hasAppName ? appName : null, // Store app name only when it exists
-                                packageName, icon, hasAppName, enabled));
-                        publishProgress(adapterPosition++);
+                        overlayAppName = AppUtils.getApplicationName(App.getContext(), overlayPackageName); // App name
+                        overlayAppIcon = AppUtils.getApplicationIcon(App.getContext(), overlayPackageName); // App icon
                     } catch (PackageManager.NameNotFoundException e) {
                         e.printStackTrace();
-                        Log.e(TAG, "Error while loading overlay " + packageName);
+                        Log.e(TAG, "Error while loading overlay " + overlayPackageName);
+                        continue;
                     }
+                    final boolean overlayEnabled = overlay.isEnabled(); // Enabled
+                    final boolean overlayHasAppName = !TextUtils.equals(overlayAppName, overlayPackageName); // Has its own app name
+
+                    list.add(new OverlayItem(overlayHasAppName ? overlayAppName : null, // Store app name only when it exists
+                            overlayPackageName, overlayAppIcon, overlayHasAppName, overlayEnabled));
+                    publishProgress(adapterPosition++);
                 }
+                // ===== Done fetching category item =====
             }
 
             return null;
@@ -501,15 +487,18 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private static class ToggleTask extends AsyncTask<Void, Void, Void> {
+    private static class ToggleOverlayTask extends AsyncTask<Void, Void, Void> {
         private final WeakReference<MainActivity> activityWeakReference;
-        private final List<OverlayItem> list;
-        private final Boolean state;
+        private final Set<Integer> indexes;
+        private final Boolean newState;
+        private final boolean resetCheckState;
 
-        ToggleTask(MainActivity activity, List<OverlayItem> list, Boolean state) {
+        ToggleOverlayTask(MainActivity activity, Set<Integer> indexes, @Nullable Boolean newState,
+                          boolean resetCheckState) {
             this.activityWeakReference = new WeakReference<>(activity);
-            this.list = list;
-            this.state = state;
+            this.indexes = indexes;
+            this.newState = newState;
+            this.resetCheckState = resetCheckState;
         }
 
         @Override
@@ -530,12 +519,24 @@ public class MainActivity extends AppCompatActivity
                 return null;
             }
 
-            if (state == null) {
+            // Get selected overlays
+            List<OverlayItem> selectedOverlays = new ArrayList<>();
+            for (int i : indexes) {
+                selectedOverlays.add((OverlayItem) activity.mOverlaysList.get(i));
+            }
+
+            if (newState == null) {
                 // Toggle overlays' states, enabled -> disabled, disabled -> enabled
-                OverlayUtils.toggleOverlays(list);
+                OverlayUtils.toggleOverlays(selectedOverlays);
+                for (OverlayItem overlay : selectedOverlays) {
+                    overlay.setEnabled(!overlay.isEnabled());
+                }
             } else {
                 // Enable or disable overlays
-                OverlayUtils.toggleOverlays(list, state);
+                OverlayUtils.toggleOverlays(selectedOverlays, newState);
+                for (OverlayItem overlay : selectedOverlays) {
+                    overlay.setEnabled(newState);
+                }
             }
 
             return null;
@@ -550,7 +551,17 @@ public class MainActivity extends AppCompatActivity
 
             activity.releaseScreen();
             activity.hideProgressBar();
-            activity.updateOverlayList();
+            for (int i : indexes) {
+                // Notify each changed item of its new state
+                Bundle b = new Bundle();
+                if (resetCheckState) {
+                    b.putBoolean(OverlayItem.Payload.CHECKED_STATE, false);
+                }
+                b.putBoolean(OverlayItem.Payload.ENABLED_STATE,
+                        ((OverlayItem) activity.mOverlaysList.get(i)).isEnabled());
+                activity.mAdapter.notifyItemChanged(i, b);
+            }
+
             Snackbar.make(activity.mCoordinatorLayout,
                     R.string.selected_toggle_complete,
                     Snackbar.LENGTH_SHORT)

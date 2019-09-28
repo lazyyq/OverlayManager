@@ -50,8 +50,6 @@ public class LoadActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.retryAndromeda:
                 askAndromedaPermission();
                 break;
-            default:
-                break;
         }
     }
 

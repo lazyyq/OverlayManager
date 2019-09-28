@@ -1,17 +1,15 @@
 package kyklab.overlaymanager.overlay;
 
-import java.util.List;
+import java.util.Set;
 
 public interface OverlayInterface {
-    boolean isAllChecked();
+    boolean isChecked(int index);
 
-    void setAllChecked(boolean isAllChecked);
+    void setChecked(int index, boolean checked);
 
     void updateOverlayList();
 
-    void toggleOverlays(List<OverlayItem> list);
-
-    void toggleOverlays(List<OverlayItem> list, boolean state);
+    void toggleOverlays(Set<Integer> list, Boolean state, boolean resetCheckState);
 
     void removeAppFromList(String packageName);
 }

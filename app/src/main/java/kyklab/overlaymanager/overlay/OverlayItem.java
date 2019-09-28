@@ -13,7 +13,6 @@ public class OverlayItem implements RvItem {
     @NonNull private final Drawable icon;
     private final boolean hasAppName;
     private boolean enabled;
-    private boolean itemChecked;
 
     public OverlayItem(@Nullable String appName, @NonNull String packageName,
                        @NonNull Drawable icon, boolean hasAppName, boolean enabled) {
@@ -22,7 +21,6 @@ public class OverlayItem implements RvItem {
         this.icon = icon;
         this.hasAppName = hasAppName;
         this.enabled = enabled;
-        this.itemChecked = false;
     }
 
     @Override
@@ -60,14 +58,6 @@ public class OverlayItem implements RvItem {
         this.enabled = enabled;
     }
 
-    public boolean isItemChecked() {
-        return itemChecked;
-    }
-
-    public void setItemChecked(boolean itemChecked) {
-        this.itemChecked = itemChecked;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -75,7 +65,6 @@ public class OverlayItem implements RvItem {
         OverlayItem that = (OverlayItem) o;
         return hasAppName == that.hasAppName &&
                 enabled == that.enabled &&
-                itemChecked == that.itemChecked &&
                 Objects.equals(appName, that.appName) &&
                 packageName.equals(that.packageName) &&
                 icon.equals(that.icon);
@@ -83,6 +72,11 @@ public class OverlayItem implements RvItem {
 
     @Override
     public int hashCode() {
-        return Objects.hash(appName, packageName, icon, hasAppName, enabled, itemChecked);
+        return Objects.hash(appName, packageName, icon, hasAppName, enabled);
+    }
+
+    public static class Payload {
+        public static final String CHECKED_STATE = "checked_state";
+        public static final String ENABLED_STATE = "enabled_state";
     }
 }

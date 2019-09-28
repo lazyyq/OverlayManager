@@ -1,6 +1,7 @@
 package kyklab.overlaymanager.overlay;
 
 import android.app.Activity;
+import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,14 +29,15 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         implements View.OnClickListener {
     private final Activity pActivity;
     private final OverlayInterface mListener;
-    private final List<RvItem> mList;
+    private final List<RvItem> mDataList;
 
-    private boolean mListenForSwitchChange = false;
+    private boolean mCheckBoxListenerEnabled = false;
+    private boolean mSwitchListenerEnabled = false;
 
-    public OverlayAdapter(Activity pActivity, OverlayInterface mListener, List<RvItem> mList) {
+    public OverlayAdapter(Activity pActivity, OverlayInterface mListener, List<RvItem> mDataList) {
         this.pActivity = pActivity;
         this.mListener = mListener;
-        this.mList = mList;
+        this.mDataList = mDataList;
     }
 
     @NonNull
@@ -56,7 +58,7 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         if (holder instanceof OverlayCategoryHolder) {
-            TargetItem target = (TargetItem) mList.get(position);
+            TargetItem target = (TargetItem) mDataList.get(position);
             OverlayCategoryHolder overlayCategoryHolder = (OverlayCategoryHolder) holder;
             // Load category icon
             Glide.with(pActivity)
@@ -65,7 +67,7 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             // Set category name
             overlayCategoryHolder.categoryNameView.setText(target.getAppName());
         } else {
-            OverlayItem overlay = (OverlayItem) mList.get(position);
+            OverlayItem overlay = (OverlayItem) mDataList.get(position);
             OverlayItemHolder overlayItemHolder = (OverlayItemHolder) holder;
             // Load app icon
             Glide.with(pActivity)
@@ -82,21 +84,57 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             // Set app name, package name, enable state, checkbox
             overlayItemHolder.appNameView.setText(overlay.getAppName());
             overlayItemHolder.packageNameView.setText(overlay.getPackageName());
-            mListenForSwitchChange = false;
-            overlayItemHolder.overlaySwitch.setChecked(overlay.isEnabled());
-            mListenForSwitchChange = true;
-            overlayItemHolder.itemCheckBox.setChecked(overlay.isItemChecked());
+            mCheckBoxListenerEnabled = false;
+            overlayItemHolder.checkBox.setChecked(mListener.isChecked(position));
+            mCheckBoxListenerEnabled = true;
+            mSwitchListenerEnabled = false;
+            overlayItemHolder.enabledSwitch.setChecked(overlay.isEnabled());
+            mSwitchListenerEnabled = true;
+        }
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position, @NonNull List<Object> payloads) {
+        if (payloads.isEmpty()) {
+            super.onBindViewHolder(holder, position, payloads);
+            return;
+        }
+
+        for (Object o : payloads) {
+            if (o instanceof Bundle) {
+                final Bundle b = (Bundle) o;
+                for (String key : b.keySet()) {
+                    switch (key) {
+                        case OverlayItem.Payload.CHECKED_STATE:
+                            if (holder instanceof OverlayItemHolder) {
+                                mCheckBoxListenerEnabled = false;
+                                ((OverlayItemHolder) holder).checkBox.setChecked(
+                                        b.getBoolean(OverlayItem.Payload.CHECKED_STATE));
+                                mCheckBoxListenerEnabled = true;
+                            }
+                            break;
+                        case OverlayItem.Payload.ENABLED_STATE:
+                            if (holder instanceof OverlayItemHolder) {
+                                mSwitchListenerEnabled = false;
+                                ((OverlayItemHolder) holder).enabledSwitch.setChecked(
+                                        b.getBoolean(OverlayItem.Payload.ENABLED_STATE));
+                                mSwitchListenerEnabled = true;
+                            }
+                            break;
+                    }
+                }
+            }
         }
     }
 
     @Override
     public int getItemCount() {
-        return mList.size();
+        return mDataList.size();
     }
 
     @Override
     public int getItemViewType(int position) {
-        return mList.get(position).getItemType();
+        return mDataList.get(position).getItemType();
     }
 
     @Override
@@ -123,11 +161,9 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             int id = view.getId();
             switch (id) {
                 case R.id.categoryLayout:
-                    TargetItem target = (TargetItem) mList.get(getAdapterPosition());
+                    TargetItem target = (TargetItem) mDataList.get(getAdapterPosition());
                     String targetPackageName = target.getPackageName();
                     AppUtils.openApplicationSettings(pActivity, targetPackageName);
-                    break;
-                default:
                     break;
             }
         }
@@ -139,8 +175,8 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         private final ImageView iconView;
         private final TextView appNameView;
         private final TextView packageNameView;
-        private final Switch overlaySwitch;
-        private final CheckBox itemCheckBox;
+        private final Switch enabledSwitch;
+        private final CheckBox checkBox;
 
         OverlayItemHolder(@NonNull View itemView) {
             super(itemView);
@@ -150,10 +186,10 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             iconView = itemView.findViewById(R.id.appIconView);
             appNameView = itemView.findViewById(R.id.appNameView);
             packageNameView = itemView.findViewById(R.id.packageNameView);
-            overlaySwitch = itemView.findViewById(R.id.overlaySwitch);
-            overlaySwitch.setOnCheckedChangeListener(this);
-            itemCheckBox = itemView.findViewById(R.id.itemCheckBox);
-            itemCheckBox.setOnCheckedChangeListener(this);
+            enabledSwitch = itemView.findViewById(R.id.overlaySwitch);
+            enabledSwitch.setOnCheckedChangeListener(this);
+            checkBox = itemView.findViewById(R.id.itemCheckBox);
+            checkBox.setOnCheckedChangeListener(this);
         }
 
         @Override
@@ -161,9 +197,7 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             int id = view.getId();
             switch (id) {
                 case R.id.itemCardView:
-                    itemCheckBox.setChecked(!itemCheckBox.isChecked());
-                    break;
-                default:
+                    checkBox.setChecked(!checkBox.isChecked());
                     break;
             }
         }
@@ -174,9 +208,7 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             switch (id) {
                 case R.id.itemCardView:
                     mListener.removeAppFromList(
-                            mList.get(getAdapterPosition()).getPackageName());
-                    break;
-                default:
+                            mDataList.get(getAdapterPosition()).getPackageName());
                     break;
             }
             return true;
@@ -185,17 +217,17 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         @Override
         public void onCheckedChanged(CompoundButton compoundButton, final boolean b) {
             int id = compoundButton.getId();
-            if (id == R.id.overlaySwitch) {
-                if (mListenForSwitchChange) {
-                    OverlayItem overlay = (OverlayItem) mList.get(getAdapterPosition());
-                    mListener.toggleOverlays(Collections.singletonList(overlay), b);
-                }
-            } else if (id == R.id.itemCheckBox) {
-                OverlayItem overlay = (OverlayItem) mList.get(getAdapterPosition());
-                overlay.setItemChecked(b);
-                if (!b) {
-                    mListener.setAllChecked(false);
-                }
+            switch (id) {
+                case R.id.overlaySwitch:
+                    if (mSwitchListenerEnabled) {
+                        mListener.toggleOverlays(Collections.singleton(getAdapterPosition()), b, false);
+                    }
+                    break;
+                case R.id.itemCheckBox:
+                    if (mCheckBoxListenerEnabled) {
+                        mListener.setChecked(getAdapterPosition(), b);
+                    }
+                    break;
             }
         }
     }

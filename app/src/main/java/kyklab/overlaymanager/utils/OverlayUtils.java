@@ -16,7 +16,7 @@ public class OverlayUtils {
         boolean state;
 
         for (RvItem item : list) {
-            if (item instanceof OverlayItem) {
+            if (item.getItemType() == RvItem.TYPE_OVERLAY) {
                 final OverlayItem overlay = (OverlayItem) item;
 
                 name = overlay.getPackageName();
@@ -30,7 +30,7 @@ public class OverlayUtils {
     public static void toggleOverlays(List<OverlayItem> list, boolean state) {
         List<String> packages = new ArrayList<>();
         for (RvItem item : list) {
-            if (item instanceof OverlayItem) {
+            if (item.getItemType() == RvItem.TYPE_OVERLAY) {
                 final OverlayItem overlay = (OverlayItem) item;
 
                 packages.add(overlay.getPackageName());
