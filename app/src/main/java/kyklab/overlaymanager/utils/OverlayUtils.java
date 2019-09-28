@@ -15,18 +15,26 @@ public class OverlayUtils {
         String name;
         boolean state;
 
-        for (OverlayItem overlay : list) {
-            name = overlay.getPackageName();
-            state = overlay.isEnabled();
-            AndromedaOverlayManager.INSTANCE.switchOverlay(
-                    Collections.singletonList(name), !state);
+        for (RvItem item : list) {
+            if (item instanceof OverlayItem) {
+                final OverlayItem overlay = (OverlayItem) item;
+
+                name = overlay.getPackageName();
+                state = overlay.isEnabled();
+                AndromedaOverlayManager.INSTANCE.switchOverlay(
+                        Collections.singletonList(name), !state);
+            }
         }
     }
 
     public static void toggleOverlays(List<OverlayItem> list, boolean state) {
         List<String> packages = new ArrayList<>();
         for (RvItem item : list) {
-            packages.add(item.getPackageName());
+            if (item instanceof OverlayItem) {
+                final OverlayItem overlay = (OverlayItem) item;
+
+                packages.add(overlay.getPackageName());
+            }
         }
 
         AndromedaOverlayManager.INSTANCE.switchOverlay(packages, state);
