@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity
         implements OverlayInterface, View.OnClickListener, View.OnTouchListener {
     private static final int REQ_CODE_REMOVE_APP = 10000;
     private static final long MINI_FAB_ANIM_LENGTH = 300L;
-    private static final long MINI_FAB_ANIM_DELAY = 100L;
+    private static final long MINI_FAB_ANIM_DELAY = 50L;
     private static final String TAG = "OVERLAY_MANAGER";
     private List<RvItem> mOverlaysList;
     private Set<Integer> mSelectedIndexes;
