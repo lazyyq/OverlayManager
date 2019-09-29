@@ -55,10 +55,11 @@ import projekt.andromeda.client.util.OverlayInfo;
 
 public class MainActivity extends AppCompatActivity
         implements OverlayInterface, View.OnClickListener, View.OnTouchListener {
-    private static final int REQ_CODE_REMOVE_APP = 10000;
+    private static final int REQ_CODE_UNINSTALL_PACKAGE = 10000;
     private static final long MINI_FAB_ANIM_LENGTH = 300L;
     private static final long MINI_FAB_ANIM_DELAY = 50L;
     private static final String TAG = "OVERLAY_MANAGER";
+    private int removeIndex;
     private List<RvItem> mOverlaysList;
     private Set<Integer> mSelectedIndexes;
     private float mMiniFabTransitionDistance;
@@ -312,11 +313,13 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void removeAppFromList(String packageName) {
+    public void uninstallPackageIndex(int index) {
+        removeIndex = index;
+        String packageName = mOverlaysList.get(index).getPackageName();
         Uri packageUri = Uri.parse("package:" + packageName);
-        Intent intent = new Intent(Intent.ACTION_DELETE, packageUri);
-        //removedApp = packageName;
-        startActivityForResult(intent, REQ_CODE_REMOVE_APP);
+        Intent intent = new Intent(Intent.ACTION_UNINSTALL_PACKAGE, packageUri);
+        intent.putExtra(Intent.EXTRA_RETURN_RESULT, true);
+        startActivityForResult(intent, REQ_CODE_UNINSTALL_PACKAGE);
     }
 
     @Override
@@ -364,13 +367,21 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQ_CODE_REMOVE_APP) {
-            //if (!AppUtils.overlayExists(removedApp)) {
-            // The function is unreliable at the moment,
-            // so let's just assume it was successfully removed anyways.
-            // App was successfully removed
-            updateOverlayList();
-            //}
+        switch (requestCode) {
+            case REQ_CODE_UNINSTALL_PACKAGE:
+                if (resultCode == -1) { // Success
+                    mOverlaysList.remove(removeIndex);
+                    mAdapter.notifyItemRemoved(removeIndex);
+
+                    // Check if it was the only overlay within its category
+                    if (mOverlaysList.get(removeIndex - 1).getItemType() == RvItem.TYPE_TARGET
+                            && (removeIndex >= mOverlaysList.size() ||
+                            mOverlaysList.get(removeIndex).getItemType() == RvItem.TYPE_TARGET)) {
+                        mOverlaysList.remove(removeIndex - 1);
+                        mAdapter.notifyItemRemoved(removeIndex - 1);
+                    }
+                }
+                break;
         }
     }
 

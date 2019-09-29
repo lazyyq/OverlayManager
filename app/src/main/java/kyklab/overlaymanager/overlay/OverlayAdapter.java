@@ -207,8 +207,7 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             int id = view.getId();
             switch (id) {
                 case R.id.itemCardView:
-                    mListener.removeAppFromList(
-                            mDataList.get(getAdapterPosition()).getPackageName());
+                    mListener.uninstallPackageIndex(getAdapterPosition());
                     break;
             }
             return true;

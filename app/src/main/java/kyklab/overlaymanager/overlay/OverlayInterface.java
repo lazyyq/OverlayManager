@@ -11,5 +11,5 @@ public interface OverlayInterface {
 
     void toggleOverlays(Set<Integer> list, Boolean state, boolean resetCheckState);
 
-    void removeAppFromList(String packageName);
+    void uninstallPackageIndex(int index);
 }
