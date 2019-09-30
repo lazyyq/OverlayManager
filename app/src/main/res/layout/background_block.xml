@@ -6,15 +6,6 @@
     tools:context=".ui.MainActivity">
 
     <View
-        android:id="@+id/fabBackground"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:alpha="@dimen/material_emphasis_disabled"
-        android:background="?attr/colorOnSurface"
-        android:clickable="true"
-        android:visibility="gone" />
-
-    <View
         android:id="@+id/backgroundBlocker"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

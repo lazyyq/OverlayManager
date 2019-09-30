@@ -38,15 +38,19 @@
 
     <include layout="@layout/background_block" />
 
-    <include layout="@layout/mini_fab_container" />
+    <com.leinardi.android.speeddial.SpeedDialOverlayLayout
+        android:id="@+id/fabBlockLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+    <com.leinardi.android.speeddial.SpeedDialView
         android:id="@+id/fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/fab_margin"
-        android:clickable="true"
-        android:src="@drawable/ic_layers_white_24dp"
-        app:tint="?colorOnSurface" />
+        app:layout_behavior="com.leinardi.android.speeddial.SpeedDialView$ScrollingViewSnackbarBehavior"
+        app:sdMainFabClosedSrc="@drawable/ic_layers_white_24dp"
+        app:sdMainFabOpenedSrc="@drawable/ic_clear_white_24dp"
+        app:sdOverlayLayout="@id/fabBlockLayout" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

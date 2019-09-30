@@ -3,9 +3,9 @@
     <string name="andromeda_denied">Andromeda access permission has been denied.</string>
     <string name="app_name">Overlay Manager</string>
     <string name="check_all">Check/uncheck all</string>
-    <string name="mini_fab_disable">Disable selected overlay(s)</string>
-    <string name="mini_fab_enable">Enable selected overlay(s)</string>
-    <string name="mini_fab_toggle">Toggle selected overlay(s)</string>
+    <string name="fab_disable">Disable selected overlay(s)</string>
+    <string name="fab_enable">Enable selected overlay(s)</string>
+    <string name="fab_toggle">Toggle selected overlay(s)</string>
     <string name="not_meant_for_you">You\'re not supposed to be seeing this. Please report to the dev if you do.</string>
     <string name="nothing_selected">No overlay(s) selected</string>
     <string name="oops">Oops!</string>

@@ -3,6 +3,7 @@ package kyklab.overlaymanager.ui;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -11,7 +12,6 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ProgressBar;
 
@@ -19,15 +19,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.cardview.widget.CardView;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+import com.leinardi.android.speeddial.SpeedDialActionItem;
+import com.leinardi.android.speeddial.SpeedDialView;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -49,23 +48,16 @@ import kyklab.overlaymanager.utils.AppUtils;
 import kyklab.overlaymanager.utils.OverlayUtils;
 import kyklab.overlaymanager.utils.ThemeManager;
 import kyklab.overlaymanager.utils.Utils;
-import kyklab.overlaymanager.utils.ViewUtils;
 import projekt.andromeda.client.AndromedaOverlayManager;
 import projekt.andromeda.client.util.OverlayInfo;
 
 public class MainActivity extends AppCompatActivity
-        implements OverlayInterface, View.OnClickListener, View.OnTouchListener {
+        implements OverlayInterface, View.OnClickListener {
     private static final int REQ_CODE_UNINSTALL_PACKAGE = 10000;
-    private static final long MINI_FAB_ANIM_LENGTH = 300L;
-    private static final long MINI_FAB_ANIM_DELAY = 50L;
     private static final String TAG = "OVERLAY_MANAGER";
     private int removeIndex;
     private List<RvItem> mOverlaysList;
     private Set<Integer> mSelectedIndexes;
-    private float mMiniFabTransitionDistance;
-    private FloatingActionButton[] mMiniFab;
-    private CardView[] mFabText;
-    private View mFabBackground;
     private View mBackgroundBlocker;
     private CoordinatorLayout mCoordinatorLayout;
     private boolean mIsAllChecked;
@@ -73,7 +65,6 @@ public class MainActivity extends AppCompatActivity
     private RefreshListTask mRefreshListTask;
     private ToggleOverlayTask mToggleOverlayTask;
     private ProgressBar mProgressBar;
-    private FloatingActionButton mFab;
 
     @SuppressLint("RestrictedApi")
     @Override
@@ -119,28 +110,48 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void setupFab() {
-        float fabSizeNormal = getResources().getDimension(R.dimen.fab_size_normal);
-        mMiniFabTransitionDistance = getResources().getDimension(R.dimen.mini_fab_transition_distance);
+        final SpeedDialView fab = findViewById(R.id.fab);
 
-        ConstraintLayout miniFabContainer = findViewById(R.id.miniFabContainer);
-        miniFabContainer.setPadding(
-                0, 0, 0, (int) (fabSizeNormal - mMiniFabTransitionDistance));
+        fab.addActionItem(
+                new SpeedDialActionItem
+                        .Builder(R.id.fab_disable, R.drawable.ic_clear_white_24dp)
+                        .setFabBackgroundColor(Color.WHITE)
+                        .setFabImageTintColor(Color.BLACK)
+                        .setLabel(R.string.fab_disable)
+                        .create());
+        fab.addActionItem(
+                new SpeedDialActionItem
+                        .Builder(R.id.fab_enable, R.drawable.ic_done_white_24dp)
+                        .setFabBackgroundColor(Color.WHITE)
+                        .setFabImageTintColor(Color.BLACK)
+                        .setLabel(R.string.fab_enable)
+                        .create());
+        fab.addActionItem(
+                new SpeedDialActionItem
+                        .Builder(R.id.fab_toggle, R.drawable.ic_cached_white_24dp)
+                        .setFabBackgroundColor(Color.WHITE)
+                        .setFabImageTintColor(Color.BLACK)
+                        .setLabel(R.string.fab_toggle)
+                        .create());
 
-        mFabText = new CardView[]{
-                findViewById(R.id.fabTextCardToggle), findViewById(R.id.fabTextCardEnable), findViewById(R.id.fabTextCardDisable)
-        };
-        mMiniFab = new FloatingActionButton[]{
-                findViewById(R.id.miniFabToggle), findViewById(R.id.miniFabEnable), findViewById(R.id.miniFabDisable)
-        };
-
-        mFab = findViewById(R.id.fab);
-        mFab.setOnClickListener(this);
-        for (FloatingActionButton miniFab : mMiniFab) {
-            miniFab.setOnClickListener(this);
-        }
-
-        mFabBackground = findViewById(R.id.fabBackground);
-        mFabBackground.setOnTouchListener(this);
+        fab.setOnActionSelectedListener(new SpeedDialView.OnActionSelectedListener() {
+            @Override
+            public boolean onActionSelected(SpeedDialActionItem actionItem) {
+                fab.close();
+                switch (actionItem.getId()) {
+                    case R.id.fab_disable:
+                        toggleSelectedOverlays(false);
+                        break;
+                    case R.id.fab_enable:
+                        toggleSelectedOverlays(true);
+                        break;
+                    case R.id.fab_toggle:
+                        toggleSelectedOverlays(null);
+                        break;
+                }
+                return true;
+            }
+        });
     }
 
     private void toggleSelectedOverlays(@Nullable Boolean newState) {
@@ -162,30 +173,6 @@ public class MainActivity extends AppCompatActivity
             mToggleOverlayTask = new ToggleOverlayTask(this, indexes, newState, resetCheckState);
             mToggleOverlayTask.execute();
         }
-    }
-
-    @SuppressLint("RestrictedApi")
-    private void expandFab() {
-        mFabBackground.setVisibility(View.VISIBLE);
-        ViewUtils.animateShowInOrder(
-                mMiniFab, 0, -mMiniFabTransitionDistance, MINI_FAB_ANIM_LENGTH, MINI_FAB_ANIM_DELAY
-        );
-        ViewUtils.animateShowInOrder(
-                mFabText, 0, -mMiniFabTransitionDistance, MINI_FAB_ANIM_LENGTH, MINI_FAB_ANIM_DELAY
-        );
-        mFab.setExpanded(true);
-    }
-
-    @SuppressLint("RestrictedApi")
-    private void collapseFab() {
-        mFabBackground.setVisibility(View.GONE);
-        ViewUtils.animateHideInOrder(
-                mMiniFab, 0, mMiniFabTransitionDistance, MINI_FAB_ANIM_LENGTH, MINI_FAB_ANIM_DELAY
-        );
-        ViewUtils.animateHideInOrder(
-                mFabText, 0, mMiniFabTransitionDistance, MINI_FAB_ANIM_LENGTH, MINI_FAB_ANIM_DELAY
-        );
-        mFab.setExpanded(false);
     }
 
     @SuppressLint("SwitchIntDef")
@@ -326,42 +313,7 @@ public class MainActivity extends AppCompatActivity
     public void onClick(View view) {
         int id = view.getId();
         switch (id) {
-            case R.id.fab:
-                if (mFab.isExpanded()) {
-                    collapseFab();
-                } else {
-                    expandFab();
-                }
-                break;
-            case R.id.miniFabToggle:
-                collapseFab();
-                toggleSelectedOverlays(null);
-                break;
-            case R.id.miniFabEnable:
-                collapseFab();
-                toggleSelectedOverlays(true);
-                break;
-            case R.id.miniFabDisable:
-                collapseFab();
-                toggleSelectedOverlays(false);
-                break;
         }
-    }
-
-    @Override
-    public boolean onTouch(View view, MotionEvent motionEvent) {
-        int id = view.getId();
-        switch (id) {
-            case R.id.fabBackground:
-                int action = motionEvent.getAction();
-                if (action == MotionEvent.ACTION_DOWN) {
-                    collapseFab();
-                }
-                view.performClick();
-                break;
-        }
-
-        return true;
     }
 
     @Override
