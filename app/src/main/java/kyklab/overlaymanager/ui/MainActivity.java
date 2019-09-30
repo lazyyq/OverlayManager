@@ -33,9 +33,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 import kyklab.overlaymanager.App;
 import kyklab.overlaymanager.R;
@@ -55,12 +53,12 @@ public class MainActivity extends AppCompatActivity
         implements OverlayInterface, View.OnClickListener {
     private static final int REQ_CODE_UNINSTALL_PACKAGE = 10000;
     private static final String TAG = "OVERLAY_MANAGER";
-    private int removeIndex;
     private List<RvItem> mOverlaysList;
-    private Set<Integer> mSelectedIndexes;
+    private List<OverlayItem> mRemoveList;
     private View mBackgroundBlocker;
     private CoordinatorLayout mCoordinatorLayout;
     private boolean mIsAllChecked;
+    private boolean mBatchUninstallMode;
     private OverlayAdapter mAdapter;
     private RefreshListTask mRefreshListTask;
     private ToggleOverlayTask mToggleOverlayTask;
@@ -76,9 +74,10 @@ public class MainActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
 
         mOverlaysList = new ArrayList<>();
-        mSelectedIndexes = new TreeSet<>();
+        mRemoveList = new ArrayList<>();
         mRefreshListTask = null;
         mToggleOverlayTask = null;
+        mBatchUninstallMode = false;
         mCoordinatorLayout = findViewById(R.id.coordinatorLayout);
         mProgressBar = findViewById(R.id.progressBar);
         mBackgroundBlocker = findViewById(R.id.backgroundBlocker);
@@ -112,6 +111,13 @@ public class MainActivity extends AppCompatActivity
     private void setupFab() {
         final SpeedDialView fab = findViewById(R.id.fab);
 
+        fab.addActionItem(
+                new SpeedDialActionItem
+                        .Builder(R.id.fab_uninstall, R.drawable.ic_delete_forever_white_24dp)
+                        .setFabBackgroundColor(Color.WHITE)
+                        .setFabImageTintColor(Color.BLACK)
+                        .setLabel(R.string.fab_uninstall)
+                        .create());
         fab.addActionItem(
                 new SpeedDialActionItem
                         .Builder(R.id.fab_disable, R.drawable.ic_clear_white_24dp)
@@ -148,19 +154,33 @@ public class MainActivity extends AppCompatActivity
                     case R.id.fab_toggle:
                         toggleSelectedOverlays(null);
                         break;
+                    case R.id.fab_uninstall:
+                        uninstallSelectedOverlays();
+                        break;
                 }
                 return true;
             }
         });
     }
 
+    private List<OverlayItem> getSelectedOverlays() {
+        List<OverlayItem> list = new ArrayList<>();
+        for (RvItem item : mOverlaysList) {
+            if (item.getItemType() == RvItem.TYPE_OVERLAY && ((OverlayItem) item).isChecked()) {
+                list.add((OverlayItem) item);
+            }
+        }
+        return list;
+    }
+
     private void toggleSelectedOverlays(@Nullable Boolean newState) {
-        toggleOverlays(mSelectedIndexes, newState, true);
+        toggleOverlays(getSelectedOverlays(), newState, true);
     }
 
     @Override
-    public void toggleOverlays(Set<Integer> indexes, @Nullable Boolean newState, boolean resetCheckState) {
-        if (indexes.isEmpty()) {
+    public void toggleOverlays(List<OverlayItem> selectedOverlays, @Nullable Boolean newState,
+                               boolean resetCheckState) {
+        if (selectedOverlays.isEmpty()) {
             Snackbar.make(mCoordinatorLayout,
                     R.string.nothing_selected,
                     Snackbar.LENGTH_SHORT)
@@ -170,7 +190,8 @@ public class MainActivity extends AppCompatActivity
         }
 
         if (Utils.isTaskExecutable(mToggleOverlayTask)) {
-            mToggleOverlayTask = new ToggleOverlayTask(this, indexes, newState, resetCheckState);
+            mToggleOverlayTask = new ToggleOverlayTask(
+                    this, selectedOverlays, newState, resetCheckState);
             mToggleOverlayTask.execute();
         }
     }
@@ -213,10 +234,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void toggleCheckAllOverlays() {
-        if (mIsAllChecked) {
-            mSelectedIndexes.clear();
-        }
-
         // Set new checked state for all items
         // and add to selected indexes set if we're in 'check all' mode
         Bundle b = new Bundle();
@@ -228,9 +245,7 @@ public class MainActivity extends AppCompatActivity
                 // so we need to block the checkbox listener temporarily
                 // and change its checked state only.
                 mAdapter.notifyItemChanged(i, b);
-                if (!mIsAllChecked) {
-                    mSelectedIndexes.add(i);
-                }
+                ((OverlayItem) item).setChecked(!mIsAllChecked);
             }
         }
 
@@ -285,28 +300,52 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public boolean isChecked(int index) {
-        return mSelectedIndexes.contains(index);
+    public void setAllChecked(boolean isAllChecked) {
+        this.mIsAllChecked = isAllChecked;
     }
 
-    @Override
-    public void setChecked(int index, boolean checked) {
-        if (checked) {
-            mSelectedIndexes.add(index);
-        } else {
-            mSelectedIndexes.remove(index);
-            mIsAllChecked = false;
+    private void uninstallSelectedOverlays() {
+        List<OverlayItem> selectedOverlays = getSelectedOverlays();
+        if (selectedOverlays.isEmpty()) {
+            Snackbar.make(mCoordinatorLayout,
+                    R.string.nothing_selected,
+                    Snackbar.LENGTH_SHORT)
+                    .setAction(android.R.string.ok, this)
+                    .show();
+            return;
         }
+
+        mBatchUninstallMode = true;
+        mRemoveList.addAll(selectedOverlays);
+        // Trigger uninstall for the first item,
+        // the rest will keep being processed in onActivityResult().
+        uninstallOverlay(mRemoveList.get(0));
     }
 
     @Override
-    public void uninstallPackageIndex(int index) {
-        removeIndex = index;
-        String packageName = mOverlaysList.get(index).getPackageName();
+    public void uninstallOverlay(OverlayItem overlay) {
+        if (!mBatchUninstallMode) {
+            mRemoveList.add(overlay);
+        }
+        String packageName = overlay.getPackageName();
         Uri packageUri = Uri.parse("package:" + packageName);
         Intent intent = new Intent(Intent.ACTION_UNINSTALL_PACKAGE, packageUri);
         intent.putExtra(Intent.EXTRA_RETURN_RESULT, true);
         startActivityForResult(intent, REQ_CODE_UNINSTALL_PACKAGE);
+    }
+
+    private void removeOverlayFromList(OverlayItem overlay) {
+        int position = mOverlaysList.indexOf(overlay);
+        mOverlaysList.remove(position);
+        mAdapter.notifyItemRemoved(position);
+
+        // Check if it was the only overlay within its category
+        if (mOverlaysList.get(position - 1).getItemType() == RvItem.TYPE_TARGET
+                && (position >= mOverlaysList.size() ||
+                mOverlaysList.get(position).getItemType() == RvItem.TYPE_TARGET)) {
+            mOverlaysList.remove(position - 1);
+            mAdapter.notifyItemRemoved(position - 1);
+        }
     }
 
     @Override
@@ -321,16 +360,30 @@ public class MainActivity extends AppCompatActivity
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
             case REQ_CODE_UNINSTALL_PACKAGE:
-                if (resultCode == -1) { // Success
-                    mOverlaysList.remove(removeIndex);
-                    mAdapter.notifyItemRemoved(removeIndex);
+                if (mRemoveList.isEmpty()) {
+                    return;
+                }
 
-                    // Check if it was the only overlay within its category
-                    if (mOverlaysList.get(removeIndex - 1).getItemType() == RvItem.TYPE_TARGET
-                            && (removeIndex >= mOverlaysList.size() ||
-                            mOverlaysList.get(removeIndex).getItemType() == RvItem.TYPE_TARGET)) {
-                        mOverlaysList.remove(removeIndex - 1);
-                        mAdapter.notifyItemRemoved(removeIndex - 1);
+                if (resultCode == -1) {
+                    // Success, remove from list
+                    removeOverlayFromList(mRemoveList.get(0));
+                } else {
+                    // Aborted or failed, reset checked state only if we're in batch uninstall mode
+                    if (mBatchUninstallMode) {
+                        mRemoveList.get(0).setChecked(false);
+                        int position = mOverlaysList.indexOf(mRemoveList.get(0));
+                        Bundle b = new Bundle();
+                        b.putBoolean(OverlayItem.Payload.CHECKED_STATE, false);
+                        mAdapter.notifyItemChanged(position, b);
+                    }
+                }
+                mRemoveList.remove(0);
+                if (mBatchUninstallMode) {
+                    if (!mRemoveList.isEmpty()) {
+                        // Uninstall next item, and we'll return to this function again
+                        uninstallOverlay(mRemoveList.get(0));
+                    } else {
+                        mBatchUninstallMode = false;
                     }
                 }
                 break;
@@ -354,7 +407,6 @@ public class MainActivity extends AppCompatActivity
             activity.blockScreen();
             activity.showProgressBar();
             activity.mAdapter.notifyItemRangeRemoved(0, activity.mOverlaysList.size());
-            activity.mSelectedIndexes.clear();
             activity.mIsAllChecked = false;
         }
 
@@ -452,14 +504,27 @@ public class MainActivity extends AppCompatActivity
 
     private static class ToggleOverlayTask extends AsyncTask<Void, Void, Void> {
         private final WeakReference<MainActivity> activityWeakReference;
-        private final Set<Integer> indexes;
+
+        /**
+         * List of overlays to toggle.
+         */
+        private final List<OverlayItem> selectedOverlays;
+
+        /**
+         * New state of selected overlays, setting this to null will swap their states.
+         */
         private final Boolean newState;
+
+        /**
+         * Whether to reset checked state of selected overlays,
+         * usually set to false for use on changing state through switch.
+         */
         private final boolean resetCheckState;
 
-        ToggleOverlayTask(MainActivity activity, Set<Integer> indexes, @Nullable Boolean newState,
-                          boolean resetCheckState) {
+        ToggleOverlayTask(MainActivity activity, List<OverlayItem> selectedOverlays,
+                          @Nullable Boolean newState, boolean resetCheckState) {
             this.activityWeakReference = new WeakReference<>(activity);
-            this.indexes = indexes;
+            this.selectedOverlays = selectedOverlays;
             this.newState = newState;
             this.resetCheckState = resetCheckState;
         }
@@ -480,12 +545,6 @@ public class MainActivity extends AppCompatActivity
             final MainActivity activity = activityWeakReference.get();
             if (activity == null || activity.isFinishing()) {
                 return null;
-            }
-
-            // Get selected overlays
-            List<OverlayItem> selectedOverlays = new ArrayList<>();
-            for (int i : indexes) {
-                selectedOverlays.add((OverlayItem) activity.mOverlaysList.get(i));
             }
 
             if (newState == null) {
@@ -514,15 +573,15 @@ public class MainActivity extends AppCompatActivity
 
             activity.releaseScreen();
             activity.hideProgressBar();
-            for (int i : indexes) {
+            for (OverlayItem overlay : selectedOverlays) {
+                int position = activity.mOverlaysList.indexOf(overlay);
                 // Notify each changed item of its new state
                 Bundle b = new Bundle();
                 if (resetCheckState) {
                     b.putBoolean(OverlayItem.Payload.CHECKED_STATE, false);
                 }
-                b.putBoolean(OverlayItem.Payload.ENABLED_STATE,
-                        ((OverlayItem) activity.mOverlaysList.get(i)).isEnabled());
-                activity.mAdapter.notifyItemChanged(i, b);
+                b.putBoolean(OverlayItem.Payload.ENABLED_STATE, overlay.isEnabled());
+                activity.mAdapter.notifyItemChanged(position, b);
             }
 
             Snackbar.make(activity.mCoordinatorLayout,

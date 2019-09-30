@@ -13,6 +13,7 @@ public class OverlayItem implements RvItem {
     @NonNull private final Drawable icon;
     private final boolean hasAppName;
     private boolean enabled;
+    private boolean checked;
 
     public OverlayItem(@Nullable String appName, @NonNull String packageName,
                        @NonNull Drawable icon, boolean hasAppName, boolean enabled) {
@@ -21,6 +22,7 @@ public class OverlayItem implements RvItem {
         this.icon = icon;
         this.hasAppName = hasAppName;
         this.enabled = enabled;
+        this.checked = false;
     }
 
     @Override
@@ -58,6 +60,14 @@ public class OverlayItem implements RvItem {
         this.enabled = enabled;
     }
 
+    public boolean isChecked() {
+        return checked;
+    }
+
+    public void setChecked(boolean checked) {
+        this.checked = checked;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -65,6 +75,7 @@ public class OverlayItem implements RvItem {
         OverlayItem that = (OverlayItem) o;
         return hasAppName == that.hasAppName &&
                 enabled == that.enabled &&
+                checked == that.checked &&
                 Objects.equals(appName, that.appName) &&
                 packageName.equals(that.packageName) &&
                 icon.equals(that.icon);
@@ -72,7 +83,7 @@ public class OverlayItem implements RvItem {
 
     @Override
     public int hashCode() {
-        return Objects.hash(appName, packageName, icon, hasAppName, enabled);
+        return Objects.hash(appName, packageName, icon, hasAppName, enabled, checked);
     }
 
     public static class Payload {

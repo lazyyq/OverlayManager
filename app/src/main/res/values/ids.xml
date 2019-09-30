@@ -3,6 +3,5 @@
     <item name="fab_disable" type="id" />
     <item name="fab_enable" type="id" />
     <item name="fab_toggle" type="id" />
-    <item name="fab_enable" type="id" />
-    <item name="fab_disable" type="id" />
+    <item name="fab_uninstall" type="id" />
 </resources>

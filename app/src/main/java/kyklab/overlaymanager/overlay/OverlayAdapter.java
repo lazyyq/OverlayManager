@@ -85,7 +85,7 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             overlayItemHolder.appNameView.setText(overlay.getAppName());
             overlayItemHolder.packageNameView.setText(overlay.getPackageName());
             mCheckBoxListenerEnabled = false;
-            overlayItemHolder.checkBox.setChecked(mListener.isChecked(position));
+            overlayItemHolder.checkBox.setChecked(overlay.isChecked());
             mCheckBoxListenerEnabled = true;
             mSwitchListenerEnabled = false;
             overlayItemHolder.enabledSwitch.setChecked(overlay.isEnabled());
@@ -207,7 +207,7 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             int id = view.getId();
             switch (id) {
                 case R.id.itemCardView:
-                    mListener.uninstallPackageIndex(getAdapterPosition());
+                    mListener.uninstallOverlay((OverlayItem) mDataList.get(getAdapterPosition()));
                     break;
             }
             return true;
@@ -219,12 +219,17 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             switch (id) {
                 case R.id.overlaySwitch:
                     if (mSwitchListenerEnabled) {
-                        mListener.toggleOverlays(Collections.singleton(getAdapterPosition()), b, false);
+                        OverlayItem overlay = (OverlayItem) mDataList.get(getAdapterPosition());
+                        mListener.toggleOverlays(Collections.singletonList(overlay), b, false);
                     }
                     break;
                 case R.id.itemCheckBox:
                     if (mCheckBoxListenerEnabled) {
-                        mListener.setChecked(getAdapterPosition(), b);
+                        OverlayItem overlay = (OverlayItem) mDataList.get(getAdapterPosition());
+                        overlay.setChecked(b);
+                        if (!b) {
+                            mListener.setAllChecked(false);
+                        }
                     }
                     break;
             }
