@@ -1,6 +1,7 @@
 package kyklab.overlaymanager.overlay;
 
 import android.graphics.drawable.Drawable;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -11,16 +12,14 @@ public class OverlayItem implements RvItem {
     @Nullable private final String appName;
     @NonNull private final String packageName;
     @NonNull private final Drawable icon;
-    private final boolean hasAppName;
     private boolean enabled;
     private boolean checked;
 
     public OverlayItem(@Nullable String appName, @NonNull String packageName,
-                       @NonNull Drawable icon, boolean hasAppName, boolean enabled) {
-        this.appName = appName;
+                       @NonNull Drawable icon, boolean enabled) {
+        this.appName = TextUtils.equals(appName, packageName) ? null : appName;
         this.packageName = packageName;
         this.icon = icon;
-        this.hasAppName = hasAppName;
         this.enabled = enabled;
         this.checked = false;
     }
@@ -33,7 +32,7 @@ public class OverlayItem implements RvItem {
     @Override
     @Nullable
     public String getAppName() {
-        return hasAppName ? appName : packageName;
+        return appName;
     }
 
     @Override
@@ -46,10 +45,6 @@ public class OverlayItem implements RvItem {
     @NonNull
     public Drawable getIcon() {
         return icon;
-    }
-
-    public boolean hasAppName() {
-        return hasAppName;
     }
 
     public boolean isEnabled() {
@@ -73,17 +68,16 @@ public class OverlayItem implements RvItem {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         OverlayItem that = (OverlayItem) o;
-        return hasAppName == that.hasAppName &&
-                enabled == that.enabled &&
+        return enabled == that.enabled &&
                 checked == that.checked &&
-                Objects.equals(appName, that.appName) &&
-                packageName.equals(that.packageName) &&
+                TextUtils.equals(appName, that.appName) &&
+                TextUtils.equals(packageName, that.packageName) &&
                 icon.equals(that.icon);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(appName, packageName, icon, hasAppName, enabled, checked);
+        return Objects.hash(appName, packageName, icon, enabled, checked);
     }
 
     public static class Payload {

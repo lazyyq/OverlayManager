@@ -65,7 +65,8 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     .load(target.getIcon())
                     .into(overlayCategoryHolder.categoryIconView);
             // Set category name
-            overlayCategoryHolder.categoryNameView.setText(target.getAppName());
+            overlayCategoryHolder.categoryNameView.setText(
+                    target.getAppName() != null ? target.getAppName() : target.getPackageName());
         } else {
             OverlayItem overlay = (OverlayItem) mDataList.get(position);
             OverlayItemHolder overlayItemHolder = (OverlayItemHolder) holder;
@@ -73,8 +74,8 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             Glide.with(pActivity)
                     .load(overlay.getIcon())
                     .into(overlayItemHolder.iconView);
-            // If app name == package name, give smaller space for appNameView
-            if (!overlay.hasAppName()) {
+            // If overlay doesn't have its own app name, give smaller space for appNameView
+            if (overlay.getAppName() == null) {
                 overlayItemHolder.appNameView.setSingleLine(true);
                 overlayItemHolder.appNameView.setEllipsize(TextUtils.TruncateAt.END);
             } else {
@@ -82,7 +83,8 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 overlayItemHolder.appNameView.setEllipsize(null);
             }
             // Set app name, package name, enable state, checkbox
-            overlayItemHolder.appNameView.setText(overlay.getAppName());
+            overlayItemHolder.appNameView.setText(
+                    overlay.getAppName() != null ? overlay.getAppName() : overlay.getPackageName());
             overlayItemHolder.packageNameView.setText(overlay.getPackageName());
             mCheckBoxListenerEnabled = false;
             overlayItemHolder.checkBox.setChecked(overlay.isChecked());
