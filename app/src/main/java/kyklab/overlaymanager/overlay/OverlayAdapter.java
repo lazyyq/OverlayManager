@@ -1,6 +1,7 @@
 package kyklab.overlaymanager.overlay;
 
 import android.app.Activity;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -15,6 +16,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -100,28 +102,105 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             return;
         }
 
-        for (Object o : payloads) {
-            if (o instanceof Bundle) {
-                final Bundle b = (Bundle) o;
-                for (String key : b.keySet()) {
-                    switch (key) {
-                        case OverlayItem.Payload.CHECKED_STATE:
-                            if (holder instanceof OverlayItemHolder) {
-                                mCheckBoxListenerEnabled = false;
-                                ((OverlayItemHolder) holder).checkBox.setChecked(
-                                        b.getBoolean(OverlayItem.Payload.CHECKED_STATE));
-                                mCheckBoxListenerEnabled = true;
-                            }
-                            break;
-                        case OverlayItem.Payload.ENABLED_STATE:
-                            if (holder instanceof OverlayItemHolder) {
-                                mSwitchListenerEnabled = false;
-                                ((OverlayItemHolder) holder).enabledSwitch.setChecked(
-                                        b.getBoolean(OverlayItem.Payload.ENABLED_STATE));
-                                mSwitchListenerEnabled = true;
-                            }
-                            break;
-                    }
+        if (holder instanceof OverlayCategoryHolder) {
+            for (Object o : payloads) {
+                handlePayload((OverlayCategoryHolder) holder, o);
+            }
+        } else if (holder instanceof OverlayItemHolder) {
+            for (Object o : payloads) {
+                handlePayload((OverlayItemHolder) holder, o);
+            }
+        }
+    }
+
+    /**
+     * Handle payloads for overlay category holder
+     *
+     * @param holder  ViewHolder to apply changes
+     * @param payload Payload to handle
+     */
+    private void handlePayload(OverlayCategoryHolder holder, Object payload) {
+//        Log.e("Adapter", "handlePayload() for category holder called"); // TODO: remove
+        if (payload instanceof Bundle) {
+            final Bundle b = (Bundle) payload;
+            for (String key : b.keySet()) {
+                switch (key) {
+                    case TargetItem.Payload.APP_NAME:
+                        // Set app name
+                        holder.categoryNameView.setText(b.getString(TargetItem.Payload.APP_NAME));
+                        break;
+                    case TargetItem.Payload.PACKAGE_NAME:
+                        // Load icon
+                        try {
+                            Glide.with(pActivity)
+                                    .load(AppUtils.getApplicationIcon(pActivity,
+                                            TargetItem.Payload.PACKAGE_NAME))
+                                    .into(holder.categoryIconView);
+                        } catch (PackageManager.NameNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                        break;
+                }
+            }
+        }
+    }
+
+    /**
+     * Handle payloads for overlay item holder
+     *
+     * @param holder  ViewHolder to apply changes
+     * @param payload Payload to handle
+     */
+    private void handlePayload(OverlayItemHolder holder, Object payload) {
+//        Log.e("Adapter", "handlePayload() for item holder called"); // TODO: remove
+        if (payload instanceof Bundle) {
+            final Bundle b = (Bundle) payload;
+            for (String key : b.keySet()) {
+                switch (key) {
+                    case OverlayItem.Payload.APP_NAME:
+                        // Set app name
+                        holder.appNameView.setText(b.getString(OverlayItem.Payload.APP_NAME));
+                        break;
+                    case OverlayItem.Payload.PACKAGE_NAME:
+                        // Set package name
+                        holder.packageNameView.setText(
+                                b.getString(OverlayItem.Payload.PACKAGE_NAME));
+                        // Load icon
+                        // Usually it's not a good idea to get app icon directly in adapter
+                        // but it should be okay now since we're only partially updating holders.
+                        try {
+                            Glide.with(pActivity)
+                                    .load(AppUtils.getApplicationIcon(pActivity,
+                                            OverlayItem.Payload.PACKAGE_NAME))
+                                    .into(holder.iconView);
+                        } catch (PackageManager.NameNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                        break;
+                    case OverlayItem.Payload.HAS_APP_NAME:
+                        // Set app name view length
+                        if (b.getBoolean(OverlayItem.Payload.HAS_APP_NAME)) {
+                            holder.appNameView.setSingleLine(false);
+                            holder.appNameView.setEllipsize(null);
+                        } else {
+                            holder.appNameView.setSingleLine(true);
+                            holder.appNameView.setEllipsize(TextUtils.TruncateAt.END);
+                        }
+                        break;
+                    case OverlayItem.Payload.CHECKED:
+                        // Set checked state
+                        mCheckBoxListenerEnabled = false;
+                        holder.checkBox.setChecked(
+                                b.getBoolean(OverlayItem.Payload.CHECKED));
+                        mCheckBoxListenerEnabled = true;
+                        break;
+                    case OverlayItem.Payload.ENABLED:
+                        // Set enabled state
+                        mSwitchListenerEnabled = false;
+                        holder.enabledSwitch.setChecked(
+                                b.getBoolean(OverlayItem.Payload.ENABLED));
+                        mSwitchListenerEnabled = true;
+                        break;
                 }
             }
         }
@@ -140,6 +219,16 @@ public class OverlayAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     @Override
     public void onClick(View view) {
 
+    }
+
+    public void update(List<RvItem> newList) {
+        final RvItemDiffCallback callback = new RvItemDiffCallback(mDataList, newList);
+        final DiffUtil.DiffResult result = DiffUtil.calculateDiff(callback);
+
+        result.dispatchUpdatesTo(this); // Should be called before updating list
+        mDataList.clear();
+        mDataList.addAll(newList);
+//        Log.e("Adapter", "diffutil update called"); //TODO: remove
     }
 
 

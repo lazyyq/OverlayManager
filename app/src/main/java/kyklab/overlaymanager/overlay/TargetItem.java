@@ -1,6 +1,7 @@
 package kyklab.overlaymanager.overlay;
 
 import android.graphics.drawable.Drawable;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -53,14 +54,16 @@ public class TargetItem implements RvItem {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         TargetItem that = (TargetItem) o;
-        return hasAppName == that.hasAppName &&
-                Objects.equals(appName, that.appName) &&
-                packageName.equals(that.packageName) &&
-                icon.equals(that.icon);
+        return TextUtils.equals(packageName, that.packageName);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(appName, packageName, icon, hasAppName);
+    }
+
+    public static class Payload {
+        public static final String APP_NAME = "target_app_name";
+        public static final String PACKAGE_NAME = "target_package_name";
     }
 }

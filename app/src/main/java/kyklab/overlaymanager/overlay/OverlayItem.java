@@ -1,6 +1,7 @@
 package kyklab.overlaymanager.overlay;
 
 import android.graphics.drawable.Drawable;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -73,12 +74,7 @@ public class OverlayItem implements RvItem {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         OverlayItem that = (OverlayItem) o;
-        return hasAppName == that.hasAppName &&
-                enabled == that.enabled &&
-                checked == that.checked &&
-                Objects.equals(appName, that.appName) &&
-                packageName.equals(that.packageName) &&
-                icon.equals(that.icon);
+        return TextUtils.equals(packageName, that.packageName);
     }
 
     @Override
@@ -87,7 +83,10 @@ public class OverlayItem implements RvItem {
     }
 
     public static class Payload {
-        public static final String CHECKED_STATE = "checked_state";
-        public static final String ENABLED_STATE = "enabled_state";
+        public static final String APP_NAME = "overlay_app_name";
+        public static final String PACKAGE_NAME = "overlay_package_name";
+        public static final String HAS_APP_NAME = "overlay_has_app_name";
+        public static final String CHECKED = "checked";
+        public static final String ENABLED = "enabled";
     }
 }

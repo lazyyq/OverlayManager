@@ -237,7 +237,7 @@ public class MainActivity extends AppCompatActivity
         // Set new checked state for all items
         // and add to selected indexes set if we're in 'check all' mode
         Bundle b = new Bundle();
-        b.putBoolean(OverlayItem.Payload.CHECKED_STATE, !mIsAllChecked);
+        b.putBoolean(OverlayItem.Payload.CHECKED, !mIsAllChecked);
         for (int i = 0; i < mOverlaysList.size(); ++i) {
             RvItem item = mOverlaysList.get(i);
             if (item.getItemType() == RvItem.TYPE_OVERLAY) {
@@ -373,7 +373,7 @@ public class MainActivity extends AppCompatActivity
                         mRemoveList.get(0).setChecked(false);
                         int position = mOverlaysList.indexOf(mRemoveList.get(0));
                         Bundle b = new Bundle();
-                        b.putBoolean(OverlayItem.Payload.CHECKED_STATE, false);
+                        b.putBoolean(OverlayItem.Payload.CHECKED, false);
                         mAdapter.notifyItemChanged(position, b);
                     }
                 }
@@ -392,9 +392,11 @@ public class MainActivity extends AppCompatActivity
 
     private static class RefreshListTask extends AsyncTask<Void, Integer, Void> {
         private final WeakReference<MainActivity> activityWeakReference;
+        private final List<RvItem> newList;
 
         RefreshListTask(MainActivity activity) {
             this.activityWeakReference = new WeakReference<>(activity);
+            this.newList = new ArrayList<>();
         }
 
         @Override
@@ -406,7 +408,6 @@ public class MainActivity extends AppCompatActivity
 
             activity.blockScreen();
             activity.showProgressBar();
-            activity.mAdapter.notifyItemRangeRemoved(0, activity.mOverlaysList.size());
             activity.mIsAllChecked = false;
         }
 
@@ -416,9 +417,6 @@ public class MainActivity extends AppCompatActivity
             if (activity == null || activity.isFinishing()) {
                 return null;
             }
-
-            List<RvItem> list = activity.mOverlaysList;
-            list.clear();
 
             Map<String, List<OverlayInfo>> map = new TreeMap<>(new Comparator<String>() {
                 @Override
@@ -434,7 +432,6 @@ public class MainActivity extends AppCompatActivity
             });
             map.putAll(AndromedaOverlayManager.INSTANCE.getAllOverlay());
 
-            int adapterPosition = 0;
             for (Map.Entry<String, List<OverlayInfo>> entry : map.entrySet()) {
                 // ===== Start fetching target item =====
                 final String targetPackageName = entry.getKey();
@@ -450,8 +447,7 @@ public class MainActivity extends AppCompatActivity
                 }
                 final boolean targetHasAppName = !TextUtils.equals(targetAppName, targetPackageName);
 
-                list.add(new TargetItem(targetAppName, targetPackageName, targetAppIcon, targetHasAppName));
-                publishProgress(adapterPosition++);
+                newList.add(new TargetItem(targetAppName, targetPackageName, targetAppIcon, targetHasAppName));
                 // ===== Done fetching target item =====
 
                 // ===== Start fetching overlay item =====
@@ -470,24 +466,13 @@ public class MainActivity extends AppCompatActivity
                     final boolean overlayEnabled = overlay.isEnabled(); // Enabled
                     final boolean overlayHasAppName = !TextUtils.equals(overlayAppName, overlayPackageName); // Has its own app name
 
-                    list.add(new OverlayItem(overlayHasAppName ? overlayAppName : null, // Store app name only when it exists
+                    newList.add(new OverlayItem(overlayHasAppName ? overlayAppName : null, // Store app name only when it exists
                             overlayPackageName, overlayAppIcon, overlayHasAppName, overlayEnabled));
-                    publishProgress(adapterPosition++);
                 }
                 // ===== Done fetching category item =====
             }
 
             return null;
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer... values) {
-            final MainActivity activity = activityWeakReference.get();
-            if (activity == null || activity.isFinishing()) {
-                return;
-            }
-
-            activity.mAdapter.notifyItemChanged(values[0]);
         }
 
         @Override
@@ -497,6 +482,7 @@ public class MainActivity extends AppCompatActivity
                 return;
             }
 
+            activity.mAdapter.update(newList);
             activity.releaseScreen();
             activity.hideProgressBar();
         }
@@ -578,9 +564,9 @@ public class MainActivity extends AppCompatActivity
                 // Notify each changed item of its new state
                 Bundle b = new Bundle();
                 if (resetCheckState) {
-                    b.putBoolean(OverlayItem.Payload.CHECKED_STATE, false);
+                    b.putBoolean(OverlayItem.Payload.CHECKED, false);
                 }
-                b.putBoolean(OverlayItem.Payload.ENABLED_STATE, overlay.isEnabled());
+                b.putBoolean(OverlayItem.Payload.ENABLED, overlay.isEnabled());
                 activity.mAdapter.notifyItemChanged(position, b);
             }
 
