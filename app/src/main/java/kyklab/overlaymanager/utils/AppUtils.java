@@ -30,21 +30,4 @@ public class AppUtils {
         intent.setData(uri);
         context.startActivity(intent);
     }
-
-    // TODO: Find a workaround for unreliable behavior of AndromedaOverlayManager's loading of
-    //  currently installed overlays.
-    /*
-    public static boolean overlayExists(String packageName) {
-        Map<String, List<OverlayInfo>> overlayInfoMap =
-                AndromedaOverlayManager.INSTANCE.getAllOverlay();
-        for (Map.Entry<String, List<OverlayInfo>> mapEntry : overlayInfoMap.entrySet()) {
-            for (OverlayInfo overlayInfo : mapEntry.getValue()) {
-                if (TextUtils.equals(overlayInfo.getPackageName(), packageName)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-    */
 }
