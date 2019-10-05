@@ -8,6 +8,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -447,8 +448,9 @@ public class MainActivity extends AppCompatActivity
                     Log.e(TAG, "Error while loading category " + targetPackageName);
                     continue;
                 }
+                final boolean targetHasAppName = !TextUtils.equals(targetAppName, targetPackageName);
 
-                list.add(new TargetItem(targetAppName, targetPackageName, targetAppIcon));
+                list.add(new TargetItem(targetAppName, targetPackageName, targetAppIcon, targetHasAppName));
                 publishProgress(adapterPosition++);
                 // ===== Done fetching target item =====
 
@@ -466,9 +468,10 @@ public class MainActivity extends AppCompatActivity
                         continue;
                     }
                     final boolean overlayEnabled = overlay.isEnabled(); // Enabled
+                    final boolean overlayHasAppName = !TextUtils.equals(overlayAppName, overlayPackageName); // Has its own app name
 
-                    list.add(new OverlayItem(overlayAppName, overlayPackageName,
-                            overlayAppIcon, overlayEnabled));
+                    list.add(new OverlayItem(overlayHasAppName ? overlayAppName : null, // Store app name only when it exists
+                            overlayPackageName, overlayAppIcon, overlayHasAppName, overlayEnabled));
                     publishProgress(adapterPosition++);
                 }
                 // ===== Done fetching category item =====
