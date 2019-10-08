@@ -565,6 +565,7 @@ public class MainActivity extends AppCompatActivity
                 Bundle b = new Bundle();
                 if (resetCheckState) {
                     b.putBoolean(OverlayItem.Payload.CHECKED, false);
+                    overlay.setChecked(false);
                 }
                 b.putBoolean(OverlayItem.Payload.ENABLED, overlay.isEnabled());
                 activity.mAdapter.notifyItemChanged(position, b);
